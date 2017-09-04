@@ -1,0 +1,882 @@
+\documentclass[compress,11pt,aspectratio=1610]{beamer}
+\usetheme{Luebeck}
+\usecolortheme{crane}
+\setbeamertemplate{navigation symbols}{}
+\usepackage{luebeck-numbers}
+
+\usepackage{nbeamer}
+\usepackage{centeredimage}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage{url}
+\urlstyle{same}
+\newcommand*{\ars}[1]{\atright{\mbox{\tiny #1}}\\}
+\renewcommand{\term}[1]{\textbf{\usebeamercolor[fg]{titlelike}{#1}}}
+\newcommand*{\spc}[1][1em]{\vspace*{#1}\par}
+\usepackage{xspace}
+\renewenvironment{knitrout}{\setlength{\topsep}{0mm}}{}
+\newcommand{\R}[1]{\colorbox{shadecolor}{\texttt{\hlstd{\small #1}}}} % R code, requires knitr defs
+\newcommand*{\Resize}[2]{\resizebox{#1}{!}{$#2$}}%
+
+<<setup, include=FALSE>>=
+require(knitr)
+# this bit makes the tildes lower
+.hook_source = knit_hooks$get('source')
+knit_hooks$set(source = function(x, options) {
+  txt = .hook_source(x, options)
+  # extend the default source hook
+  gsub('~', '\\\\textasciitilde', txt)
+})
+#
+knit_hooks$set(par=function(before, options, envir){
+if (before && options$fig.show!='none') par(mar=c(5.1,4.1,2.1,2.1))
+}, crop=hook_pdfcrop)
+#
+opts_chunk$set(fig.path='img/auto-',fig.align='center',fig.show='hide',size='scriptsize',warning=FALSE,tidy=TRUE,tidy.opts=list(keep.blank.line=FALSE, width.cutoff=70),fig.width=5,fig.height=4.15,par=TRUE)
+# set everything to handlable numbers of digits (reclaim screen space!)
+options(replace.assign=TRUE,width=70,digits=2)
+#options(mar=c(5.1,4.1,1.1,2.1),cex=2,cex.text=2)
+source('R/preamble.R') # useful functions
+@ 
+
+
+\title[UMSR~1]{Introduction}
+\subtitle{Univariate Statistics and Methodology using R}
+\author{Martin Corley}
+\date{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ----------------------------------
+
+\begin{document}
+
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+ \begin{frame}<1| handout:0>{Pick A Card\ldots}
+ \cimage[.75\linewidth]{img/cards1}
+ \end{frame}
+
+\begin{frame}{The R Team}
+  \begin{block}{Course leaders}
+    Martin Corley, Room G8, 7GS \atright{\url{Martin.Corley@ed.ac.uk}}\\
+    Pavel Iosad, Room 3.08, DSB \atright{\url{Pavel.Iosad@ed.ac.uk}}
+  \end{block}
+  \begin{alertblock}{Teaching Fellow}
+  Milan Val\'{a}\v{s}ek, Room G6, 7GS \atright{\url{Milan.Valasek@ed.ac.uk}}\\
+  \textcolor{gray}{Luna de Ferrari, Room G6, 7GS \atright{\url{luna.deferrari@ed.ac.uk}}}
+    \end{alertblock}
+%  \spc
+  \begin{block}{Tutor Team}
+\begin{tabular}{p{.4\linewidth}p{.4\linewidth}}
+Amrita Ahuwalia &  Ruth Corps \\
+Andres Karjus & Daisy Smith \\
+\end{tabular}  
+\end{block}
+\atright{\pgfimage[width=.25\linewidth]{img/a-team-van.jpg}}
+\end{frame}
+
+ 
+\begin{frame}{Practicalities}
+  \begin{block}{Weekly components of the course}
+    \begin{itemize}
+    \item \term{lectures} \atright{Wednesdays 09:00, here}
+    \item \term{labs} \atright{Thursdays 11:00 \emph{or} Fridays 13:00, 7GS}
+%    \item<2-> \term{tutorials} \atright{Thursdays 13:00, F21, 7GS}
+    \end{itemize}
+  \end{block}
+
+\begin{itemize}
+\item<1-> if you need to change lab, contact Milan
+%%%% CHECK THIS
+\item<2-> further support: bulletin boards on Learn
+\end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}{More About Labs}
+  \begin{itemize}
+  \item worksheets for labs will be available on Learn
+\begin{itemize}
+  \item you can print them out if you like
+  \item feel free to try stuff ahead of time
+
+  \item<alert@1> inadvisable to skip labs
+  \end{itemize}
+\spc
+\item<2-> any solutions will go online after the relevant lab
+  \item<2-> difficulties? \ra{} bulletin boards
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{If You Get Ahead}
+  \begin{itemize}
+  \item additional readings on Learn
+  \item optional homeworks and solutions
+  \end{itemize}
+  
+\end{frame}
+
+\begin{frame}{Exam}
+  
+
+  \begin{itemize}
+  \item a long way off, don't panic!
+\spc
+  \item analyse some data using \R{R} (and show us how you did it)
+  \item write up a brief `results section' summarising the analysis
+  \end{itemize}
+  
+\end{frame}
+
+\begin{frame}{Aims of the Course}
+  \begin{itemize}
+  \item \term{teach} (or consolidate) fundamental methodological
+    and statistical understanding
+  \item \term{introduce} the use of \R{R}~as a powerful tool
+    for \alert<2->{understanding data} \uncover<2->{(not just NHST)}
+  \end{itemize}
+  
+\end{frame}
+
+\end{document}
+
+\begin{frame}
+\frametitle{Today}
+\tableofcontents
+\end{frame}
+
+%\section{Practicalities}
+
+\section[Manifesto]{A Manifesto for R}
+\subsection[R~Overview]{An Overview of R}
+
+\begin{frame}{The R Project}
+\begin{columns}
+  \column{.34\linewidth}
+  \cimage[.8\linewidth]{img/rlogo}
+  \column{.65\linewidth}
+  \begin{itemize}
+  \item a `statistical programming language'
+  \item created mid-90s as a free version of \R{S}
+  \item widespread adoption since v2 (2004)
+  \end{itemize}
+\end{columns}
+\pause\spc[2em]
+\begin{columns}
+\column{.7\linewidth}
+\begin{itemize}
+\item an `integrated development environment'
+\item created 2011 `to improve \R{R} experience'
+\item widespread adoption since 2012
+\end{itemize}
+\column{.34\linewidth}
+\visible<2->{\cimage[.6\linewidth]{img/rslogo}}
+  
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{R vs RStudio}
+\begin{block}{This is R}
+<<eval=F>>=
+model <- lm(RT ~ (age+freq+handedness)^2, data=words)
+summary(model)
+@   
+\end{block}
+\pause\spc
+\begin{block}{This is RStudio}
+\visible<2->{\cimage[.4167\linewidth]{Labs/img/rstudio1}}
+\end{block}
+\begin{itemize}
+\item RStudio is just one (good) way of `talking to' \R{R}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[plain]
+
+\centering{\Large{What is \R{R} Good For?}}
+  
+\end{frame}
+
+\begin{frame}{Managing Datasets}
+\cimage[.7\linewidth]{img/rtable}
+  
+\end{frame}
+
+\begin{frame}[fragile]{Doing Statistics}
+<<echo=FALSE,message=FALSE,warning=FALSE,cache=TRUE,comment=NA>>=
+require(lme4)
+load('R/model.Rdata')
+.pp(summary(model),l=list(1:15,0))
+@   
+  
+\end{frame}
+
+
+\begin{frame}{Publication-Quality Graphics}
+\cimage{img/ultra-profiles.pdf}
+  
+  
+\end{frame}
+
+\begin{frame}{Data Visualisation}
+\cimage{img/fbook_sm}
+\spc[2em]
+\atright{\small\url{http://paulbutler.org/archives/visualizing-facebook-friends/}}
+\end{frame}
+
+\begin{frame}{Online Interactive Visualisation}
+  
+
+  
+
+    \href{http://shiny.rstudio.com/gallery/superzip-example.html}{\cimage[.5833\linewidth]{img/superzip}}
+\spc[2em]
+    
+
+    \centering{SuperZips: in top 5\% for education and income}
+
+
+\only<0| handout:1>{\spc\atright{\small\url{{http://shiny.rstudio.com/gallery/superzip-example.html}}}}    
+\end{frame}
+
+\begin{frame}[fragile,shrink=5]{Simulated Experiments}
+  \begin{itemize}
+  \item if I toss four coins 100 times, how many times will I get \term{HHHH}?
+  \end{itemize}
+<<heads>>=
+# how many of 100 throws should be HHHH
+.5^4 * 100
+# throw four coins 100 times, record number of heads
+throws <- rbinom(100,4,prob=.5)
+throws
+sum(throws == 4)
+@ 
+\pause
+\begin{itemize}
+\item what about 10,000 times?
+\end{itemize}
+<<heads2>>=
+.5^4 * 10000
+sum (rbinom(10000,4,prob=.5) == 4)
+@   
+\end{frame}
+
+\begin{frame}[fragile]{Large Samples Approach the Population}
+<<heads3,cache=T>>=
+pHead <- function(size) {
+    sum(rbinom(size,4, prob=0.5)==4) / size
+    }
+x <- seq(5:10000)
+plot(x,sapply(x,pHead),pch=20,col='red',xlab='sample size',ylab='p(HHHH)')
+@ 
+\cimage[.5\linewidth]{img/auto-heads3-1}  
+\end{frame}
+
+\begin{frame}[fragile]{Almost Anything to do with Data}
+<<PP,fig.width=8,fig.height=8,message=FALSE,cache=TRUE>>=
+require(tm)
+require(wordcloud)
+# load "Pride and Prejudice"
+pp <- Corpus(DirSource('PP/'))
+pp <- tm_map(pp,stripWhitespace)
+pp <- tm_map(pp,tolower)
+pp <- tm_map(pp,removeWords,stopwords('english'))
+pp <- tm_map(pp,stemDocument)
+pp <- tm_map(pp,removePunctuation)
+pp <- tm_map(pp, PlainTextDocument)
+wordcloud(pp, scale=c(5,0.5), max.words=150, random.order=FALSE, rot.per=0.35, colors=brewer.pal(12,'Dark2'))
+@ 
+% should work now  
+\end{frame}
+
+\begin{frame}{The 150 Most Frequent Words in \emph{Pride and Prejudice}}
+\cimage[.5833\linewidth]{img/auto-PP-1}  
+\end{frame}
+
+\begin{frame}{A Huge Community}
+  \begin{itemize}
+  \item \emph{someone else} has done all the hard work to create wordclouds
+  \item released as libraries or \emph{packages} (like \R{lme4} and \R{psych})
+  \item all I supplied was a text version of \emph{Pride and Prejudice}
+    \spc
+  \item<2-> \R{R} allows you to do \emph{anything} with data
+  \item<2-> if it's useful, chances are someone has already done it
+  \item<2-> useful things include statistics! 
+    \spc
+  \item<3-> if it's useful, chances are someone is (constantly)
+    improving it (which is both good and bad)
+  \end{itemize}
+  
+  
+\end{frame}
+
+\subsection[R~Justification]{Why Use R?}
+\begin{frame}{Why Use R?}
+  \begin{itemize}
+  \item \R{R} is pretty cool!
+  \item<2-> because it's a \emph{language}, I can easily show you what I did and
+    you can copy it
+  \item<2-> because it's a \emph{language}, statisticians use \R{R} to
+    implement leading-edge stats
+  \item<3-> because it's \emph{free}, anyone can use \R{R}---and anyone
+    can access your research
+  \item<3-> because it's \emph{open source}, anyone can fix or improve \R{R}
+  \item<4-> \R{R} is pretty cool!
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{R Usage: Citations in Journal Articles}
+\cimage[.6667\linewidth]{img/articles.png}
+\spc
+\atright{\small\url{http://r4stats.com/articles/popularity/}}
+  
+\end{frame}
+
+\begin{frame}{R Usage: Jobs on indeed.com}
+
+ \cimage[.6667\linewidth]{img/jobs_indeed}
+ \spc
+ \atright{\small\url{http://r4stats.com/articles/popularity/}}
+ 
+\end{frame}  
+
+
+\begin{frame}
+  \frametitle{R Usage: Analytic Professionals}
+
+\cimage[.6667\linewidth]{img/usage_rexer}
+\spc
+\atright{\small\url{http://bit.ly/1mYNSy7}}
+
+
+
+\end{frame}
+
+
+
+\begin{frame}{Why Are We Teaching R?}
+  
+  \begin{itemize}
+  \item much of how we deal with data involves statistical analysis,
+    so we could use SPSS (or STATA, or SAS)\spc
+  \item but \R{R} helps you \emph{understand} your data (not just get
+    a $p$-value)
+  \end{itemize}
+
+  % R is very powerful---do you need that power?  Yes you do (to
+  % understand your data, to keep up with current stats, to look to
+  % the future, to share analyses with others)
+  
+  % R isn't always easy to learn but...
+  
+\end{frame}    
+
+\end{document}
+
+\section[Example]{A Toy Experiment}
+
+\subsection{Design}
+\begin{frame}
+\frametitle{A Toy Experiment}
+%\tableofcontents
+\begin{block}{Research Design}
+\begin{itemize}
+\item Idea \ra{} Design
+  \begin{itemize}
+  \item roughly, ``how to have research ideas''\footnote{Much more on
+      this in Psychological Research Skills}
+  \end{itemize}
+\item Design \ra{} Implementation
+  \begin{itemize}
+  \item roughly, ``how to get from idea to experiment''
+  \end{itemize}
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Finding A Research Question}
+\begin{itemize}
+\item \emph{replication} and \emph{extension} of findings
+\item<2-> for example, the effect of pupil size on attractiveness ratings
+\end{itemize}  
+\begin{overprint}
+  \onslide<1| handout:0>
+  \cimage[.3333\linewidth]{img/eyes_s}
+  \onslide<2-| handout:1>
+    \cimage[.3333\linewidth]{img/eyes_b}
+  \end{overprint}
+\ars{``average US face in 2050'' \emph{(National Geographic)}}
+\end{frame}
+
+\begin{frame}{Pupil Size and Attractiveness}
+  \begin{itemize}
+  \item larger pupil size leads to higher attractiveness
+    ratings
+  \item but is this a simple relationship?
+  \end{itemize}
+\begin{columns}
+\column[t]{.4083\linewidth}
+\visible<2->{\cimage[.6\linewidth]{img/ming2_sp}}
+\column[t]{.4083\linewidth}
+\visible<3->{\cimage[.6\linewidth]{img/ming2_bp}}
+\end{columns}
+\visible<3->{\atright{\small mingers.com}}
+\spc
+\begin{itemize}
+\item<visible@3-> e.g., men prefer big pupils in women; women prefer
+  medium pupils in men (unless
+  they like ``bad boys'') \ars{(Tombs \& Silverman 2004)}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Finding A Research Question}
+  \begin{itemize}
+  \item design based on \emph{criticism} of previous work
+  \end{itemize}
+ \begin{columns}
+\column{.49\linewidth}
+\cimage[.9\linewidth]{img/rack_stick}
+\column{.49\linewidth}
+  \begin{itemize}
+  \item individuals with Autism
+    have problems with imitating the \emph{style} of meaningless
+    actions with (unconventional) objects \ars{(Hobson \& Lee, 1999)}
+  \end{itemize}
+\end{columns}
+
+\spc
+\begin{itemize}
+\item<visible@2-> groups poorly diagnosed, poorly matched
+\item<visible@2-> individual tasks analysed independently
+\item<visible@2-> coding conflates `success' and `style'
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[plain]
+\begin{center}
+{\Large remember your playing card\ldots?}
+\end{center}
+
+\end{frame}
+
+\begin{frame}{Your Card Has Vanished}
+\begin{overprint}
+\onslide<1-| handout:0>
+\cimage[.75\linewidth]{img/cards2}
+\onslide<0| handout:1->
+\begin{center}
+[magic trick to be revealed in lecture]
+\end{center}
+\end{overprint}
+\spc
+\begin{itemize}
+\item<2-| visible@2-> \term{change blindness} \ars{(e.g., Rensink et al.\@
+    '87)}
+\spc
+\item<2-| uncover@3> design based on (well-informed) \emph{hunch}
+\item<2-| uncover@3> might be a more general property of cognition
+\begin{itemize}
+\item<2- |uncover@3> \term{good-enough representations}
+  \ars{(e.g., Ferreira et al., '02)}
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{From Hunch to Design}
+  \begin{block}{The Basic Idea}
+\begin{itemize}
+  \item might be a more general property of cognition
+  \item[\ra] might be a property of \emph{language}
+
+  \end{itemize}
+\end{block}
+\spc
+\begin{itemize}
+\item memory for surface form declines over time \ars{(Sachs, 1967)}
+\item<alert@2> probe items with similar meanings easily confused\ars{(Wanner, 1974)}
+\item<alert@2> specific details of focused words better remembered\ars{(Birch
+    \& Garnsey, 1995)}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Fleshing Things Out}
+\begin{block}{Focused Words}
+What Jamie really liked was the \alert<2->{cider}\\
+It was \alert<2->{Jamie} who really liked the cider
+\end{block}
+\spc
+\pause[3]
+  \begin{itemize}
+  \item so, we predict that\ldots{}
+\spc
+\pause
+\item given some text to recognise, participants are more likely to
+  detect changes which
+  \begin{itemize}
+  \item change meaning
+  \item are in focus
+  \end{itemize}
+
+  \end{itemize}
+\pause
+\end{frame}
+
+\begin{frame}{Fleshing Things Out II}
+\begin{itemize}
+\item given \alert<1>{some text} to \alert<2>{recognise}, participants are \alert<6>{more likely to
+  detect} \alert<3>{changes} which
+  \begin{itemize}
+  \item \alert<4>{change meaning}
+  \item \alert<5>{are in focus}
+  \end{itemize}
+
+  \end{itemize}
+\spc
+\begin{block}{Design}
+Participants view short passages of text \visible<2->{and are then shown them again
+and asked if there are any changes.} \visible<3->{Sometimes, single words change}\visible<4->{,
+either to semantically-close or semantically-distant words.}  \visible<5->{Half
+of the words which change are linguistically focused.}
+
+\visible<6>{We predict that changes to distant words will be
+  detected more often, especially when those words are in focus.}
+\end{block}
+\end{frame}
+
+\begin{frame}{Implementation}
+  \begin{itemize}
+  \item we've fleshed out our hunch using the literature
+  \item we know what the experiment will be
+\spc
+\item now we need to get from the \term{design} to the \emph{implementation}
+  %% \begin{itemize}
+  %% \item included: decisions about what the implementation should look like
+  %% \item not included: technology (DMDX, E-Prime, etc.)
+  %% \end{itemize}
+
+  \end{itemize}
+
+  
+\end{frame}
+
+\begin{frame}{Conditions}
+
+  \begin{itemize}
+  \item how do we independently assess the effects of focus and of
+    semantic distance?
+  \item how many conditions?
+\spc
+\pause
+\begin{itemize}
+\item semantically distant
+\item focused
+\item neither focused nor distant
+\item<visible@3-> focused \emph{and} distant
+\end{itemize}
+  \end{itemize}
+  
+\end{frame}
+
+\begin{frame}
+\frametitle{Two IVs}
+\begin{columns}
+\column[t]{.47\linewidth}
+\vspace*{-.5\baselineskip}
+\begin{overprint}
+\onslide<1| handout:0>
+\cimage{img/additive1}
+\onslide<2| handout:0>
+\cimage{img/additive2}
+\onslide<3| handout:0>
+\cimage{img/additive3}
+\onslide<4| handout:0>
+\cimage{img/additive4}
+\onslide<5-| handout:1>
+\cimage{img/additive5}
+\end{overprint}
+\column[t]{.47\linewidth}
+\vspace*{-.5\baselineskip}
+\begin{overprint}
+\onslide<6-| handout:1>
+\cimage{img/interactive2}%
+%\onslide<0| handout:1>
+%\cimage{img/interactive1}%
+\end{overprint}
+\end{columns}
+\vspace*{.5\baselineskip}
+\begin{overprint}
+\onslide<1-2| handout:0>
+\begin{itemize}
+\item how should the $y$-axis be labelled?
+  \begin{itemize}
+  \item i.e., what is the dependent variable?
+  \end{itemize}
+\end{itemize}
+\onslide<3-| handout:1>
+\begin{itemize}
+\item<5-> \term{additive effects:} two \emph{separate} ways of
+  enhancing detection
+\item<6-> \term{interaction:} ways of enhancing detection \emph{not} separable
+\end{itemize}
+\end{overprint}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%% HERE
+
+\begin{frame}{Stimuli}
+  \begin{itemize}
+  \item how \emph{long} should the text passages be?
+    \begin{itemize}
+    \item<visible@2-> `long enough' (\ra{} piloting)
+    \end{itemize}
+\spc
+  \item how do we determine semantic distance?
+    \begin{itemize}
+    \item<visible@3-> LSA, WordNet, pretesting\ldots{} 
+    \end{itemize}
+\spc
+  \item should the word that \emph{changes} remain constant (cider
+    \ra{} beer/music), or should the \emph{change} be constant?
+    (beer/music \ra{} cider)?
+    \begin{itemize}
+    \item<visible@4-> detecting a change \emph{to} a (constant)
+      passage of text\ldots{} (depends on theoretical focus)
+    \end{itemize}
+ \end{itemize}
+
+
+\end{frame}
+
+
+\begin{frame}{Example Materials}
+\begin{block}{Focus on \emph{the cider}}
+Everyone had a good time at the pub. A group of
+friends had met up there for a stag night. What
+Jamie really liked was the cider, apparently.
+\end{block}
+\spc
+\begin{block}{Focus on \emph{Jamie}}
+Everyone had a good time at the pub. A group of
+friends had met up there for a stag night. It was
+Jamie who really liked the cider, apparently.
+\end{block}
+\spc
+\begin{itemize}
+\item \emph{cider} changes to \emph{beer} (close) or \emph{music} (distant)
+\end{itemize}
+\ars{(Sanford et al., 2004)}
+\end{frame}
+
+\begin{frame}
+
+\frametitle{Within or Between?}
+
+\begin{itemize}
+\item \term{within subjects}
+\begin{itemize}
+\item \term{advantage}: reduces between-subject variability (increases
+  power)
+\item \term{disadvantage}: repetition of passages increases memory for
+  detail?
+\end{itemize}
+\spc
+
+\item \term{between subjects}
+\begin{itemize}
+\item \term{advantage}: no repetition
+\item \term{disadvantage}: loss of power
+%\item[\ra{}] differing \emph{groups} of subjects\ldots{}?
+\end{itemize}
+\spc
+
+\pause
+\item need a compromise solution!
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Counterbalancing}
+\begin{center}
+\small{%
+\begin{tabular}{ccccccc}
+~ & \textbf{mat1} & \textbf{mat2} & \textbf{mat3} & \textbf{mat4} & \textbf{mat5} & $\cdots$ \\
+\textbf{sub1} & \alert<2-3>{A} & \alert<2>{B} & \alert<2>{C} & \alert<2>{D} & \alert<2>{A} &     $\cdots$ \\
+\textbf{sub2} & \alert<3>{D} & A & B & C & D &     $\cdots$ \\
+\textbf{sub3} & \alert<3>{C} & D & A & B & C &     $\cdots$ \\
+\textbf{sub4} & \alert<3>{B} & C & D & A & B &     $\cdots$ \\
+$\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ &     $\ddots$
+\end{tabular}}
+\end{center}
+\begin{itemize}
+\item<2-> each participant only sees each passage once, but contributes to
+  mean for all conditions
+\item<3-> each material (here, passage/change combo) seen in all
+  conditions over 4~subjects
+\item<4-> run multiples of 4~subjects/materials and analyse as `within'
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Implementation Issues}
+  \begin{itemize}
+  \item how many materials?
+\spc
+\item how long should the passage appear on-screen for first reading?
+\spc
+\item how can we avoid non-linguistic (e.g., iconic) memory?
+\spc
+\item how are we going to \alert<2>{analyse our findings}?
+\pause
+  \begin{itemize}
+  \item analysis is part of the \emph{design} process
+  \item we should be able to answer this \emph{before} collecting data
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Anything missing?}
+so far, we've only talked about items with changes\ldots{}
+\pause
+\spc[1em]
+
+\ldots{} which means that participants are pressing ``YES'' every time\ldots{}
+\pause
+\spc[1em]
+
+\begin{itemize}
+\item we need ``NO'' responses too
+\item \term{fillers} (in this case, passages which don't change)
+\end{itemize}
+\end{frame}
+
+\subsection{Analysis}
+
+\begin{frame}{Sanford et al. (2004, Expt~1)}
+  \begin{itemize}
+  \item 40 participants
+  \item 28~passage/change combos, varying focus/semantic distance:
+    counterbalanced (each participant sees 7~items in each condition)
+  \item 48~items with close/distant changes to
+    verbs\footnote{combining experiments}
+  \item 12~fillers with no change; 12~with various changes (to mask
+    change location)
+\spc
+\pause
+  \item 8-second \emph{or} self-paced display of passage
+  \item 500ms grey screen
+  \item redisplay of passage (for max 10 sec); verbal report of change
+%% \spc
+%% \pause
+%%   \item analysis: $2\times{}2$ ANOVA (actually, this is the wrong analysis!)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Results}
+\cimage[.9\linewidth]{img/sanford}
+\end{frame}
+
+\begin{frame}
+  \frametitle{So Now We Can Go Home\ldots{}?}
+  \begin{itemize}
+  \item the graph shows us the general pattern of results
+    \item but we want to know whether this pattern is \emph{related
+        to} the experimental manipulations
+  \item traditional statistics allow us to reason (negatively!) about how the results
+    came about
+    \begin{itemize}
+    \item ``the differences between conditions are \emph{unlikely} to
+      be due to chance''
+    \end{itemize}
+
+    \end{itemize}      
+  \end{frame}
+  
+\begin{frame}[plain]
+  
+\cimage[.9\linewidth]{img/correlation}
+\spc
+\ars{www.xkcd.com}
+
+\end{frame}
+
+\begin{frame}{Reasoning About Findings}      
+\begin{itemize}
+    \item we've already seen one (valid) way of estimating the
+      likelihood of an outcome when we tossed imaginary coins
+    \item the width of the `bar' represents the range of outcomes
+      we'd expect for a given sample size
+    \item outcomes outwith the `bar' are relatively unlikely unless
+      `something's going on'
+  \end{itemize}
+\cimage[.6\linewidth]{img/auto-heads3-1}
+  
+\end{frame}
+
+\begin{frame}{Reasoning About Findings}
+  \begin{itemize}
+  \item NHST is effectively \emph{mathematical} simulations
+    of experiments
+  \item we aim to determine how wide the `bars' are (measures related to
+    standard error) and whether our observations fall outside them
+  \item observations which fall outwith `what we might expect' have a
+    low probability of occurring by chance (low $p$)
+  \item<2-| alert@2> all the rest is reasoning and theory
+\spc
+\item<3-> this course: how to estimate $p$, and how to understand your
+  data well enough to understand and evaluate that estimate
+\item<3-> there are other ways of doing statistics, and we will touch
+  on them during the course
+\end{itemize}
+  
+  
+\end{frame}
+
+
+\begin{frame}{This Week's Work}
+\begin{block}{Lab}
+  \begin{itemize}
+  \item a gentle introduction to \R{R} and to the \R{RStudio} environment
+  \end{itemize}
+\end{block}
+\spc
+\begin{block}{Reading}
+  \begin{itemize}
+  \item Navarro, chs.~1 and~2
+  \end{itemize}
+\end{block}
+\spc
+\begin{block}{Homework}
+  \begin{itemize}
+  \item start working slowly through Navarro, chs.~3 and~4
+  \end{itemize}
+\end{block}
+
+
+\end{frame}
+
+\appendix
+\begin{frame}[fragile,shrink=10]{Sanford et al. (2004, Expt~1)}
+<<analyse>>=
+sanford <- read.table(file='R/cleft_data.txt',header=T)
+s.by.s <- with(sanford,aggregate(resp,list(subj,focus,dist),mean))
+names(s.by.s) <- c('subj','focus','dist','PERCENT')
+model <- aov(PERCENT ~ focus*dist+Error(subj/(focus*dist)),
+             data=s.by.s)
+summary(model)
+@   
+\end{frame}
+
+
+\end{document}
