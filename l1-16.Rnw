@@ -33,9 +33,9 @@ knit_hooks$set(par=function(before, options, envir){
 if (before && options$fig.show!='none') par(mar=c(5.1,4.1,2.1,2.1))
 }, crop=hook_pdfcrop)
 #
-opts_chunk$set(fig.path='img/auto-',fig.align='center',fig.show='hide',size='scriptsize',warning=FALSE,tidy=TRUE,tidy.opts=list(keep.blank.line=FALSE, width.cutoff=92),fig.width=5,fig.height=4.15,par=TRUE)
+opts_chunk$set(fig.path='img/auto-',fig.align='center',fig.show='hide',size='scriptsize',warning=FALSE,tidy=TRUE,tidy.opts=list(keep.blank.line=FALSE, width.cutoff=80),fig.width=5,fig.height=4.15,par=TRUE)
 # set everything to handlable numbers of digits (reclaim screen space!)
-options(replace.assign=TRUE,width=92,digits=2)
+options(replace.assign=TRUE,width=80,digits=2)
 #options(mar=c(5.1,4.1,1.1,2.1),cex=2,cex.text=2)
 source('R/preamble.R') # useful functions
 @ 
@@ -216,7 +216,6 @@ load('R/model.Rdata')
   
 \end{frame}
 
-\end{document}
 
 \begin{frame}{Publication-Quality Graphics}
 \cimage{img/ultra-profiles.pdf}
@@ -226,7 +225,7 @@ load('R/model.Rdata')
 
 \begin{frame}{Data Visualisation}
 \cimage{img/fbook_sm}
-\spc[2em]
+\spc[1em]
 \atright{\small\url{http://paulbutler.org/archives/visualizing-facebook-friends/}}
 \end{frame}
 
@@ -283,7 +282,7 @@ plot(x,sapply(x,pHead),pch=20,col='red',xlab='sample size',ylab='p(HHHH)')
 require(tm)
 require(wordcloud)
 # load "Pride and Prejudice"
-pp <- Corpus(DirSource('PP/'))
+pp <- Corpus(DirSource('R/PP/'))
 pp <- tm_map(pp,stripWhitespace)
 pp <- tm_map(pp,tolower)
 pp <- tm_map(pp,removeWords,stopwords('english'))
@@ -296,8 +295,10 @@ wordcloud(pp, scale=c(5,0.5), max.words=150, random.order=FALSE, rot.per=0.35, c
 \end{frame}
 
 \begin{frame}{The 150 Most Frequent Words in \emph{Pride and Prejudice}}
-\cimage[.5833\linewidth]{img/auto-PP-1}  
+\cimage[.6\linewidth]{img/auto-PP-1}  
 \end{frame}
+
+\end{document}
 
 \begin{frame}{A Huge Community}
   \begin{itemize}

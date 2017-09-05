@@ -24,6 +24,7 @@ tidy:
 clean:	
 	latexmk -C
 	rm -f img/auto-*
+	rm -f cache/*
 	rm -f *.tex *.vrb
 
 forget:
