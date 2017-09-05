@@ -33,9 +33,9 @@ knit_hooks$set(par=function(before, options, envir){
 if (before && options$fig.show!='none') par(mar=c(5.1,4.1,2.1,2.1))
 }, crop=hook_pdfcrop)
 #
-opts_chunk$set(fig.path='img/auto-',fig.align='center',fig.show='hide',size='scriptsize',warning=FALSE,tidy=TRUE,tidy.opts=list(keep.blank.line=FALSE, width.cutoff=70),fig.width=5,fig.height=4.15,par=TRUE)
+opts_chunk$set(fig.path='img/auto-',fig.align='center',fig.show='hide',size='scriptsize',warning=FALSE,tidy=TRUE,tidy.opts=list(keep.blank.line=FALSE, width.cutoff=92),fig.width=5,fig.height=4.15,par=TRUE)
 # set everything to handlable numbers of digits (reclaim screen space!)
-options(replace.assign=TRUE,width=70,digits=2)
+options(replace.assign=TRUE,width=92,digits=2)
 #options(mar=c(5.1,4.1,1.1,2.1),cex=2,cex.text=2)
 source('R/preamble.R') # useful functions
 @ 
@@ -59,7 +59,7 @@ source('R/preamble.R') # useful functions
  \end{frame}
 
 \begin{frame}{The R Team}
-  \begin{block}{Course leaders}
+  \begin{block}{Course Leaders}
     Martin Corley, Room G8, 7GS \atright{\url{Martin.Corley@ed.ac.uk}}\\
     Pavel Iosad, Room 3.08, DSB \atright{\url{Pavel.Iosad@ed.ac.uk}}
   \end{block}
@@ -142,7 +142,6 @@ Andres Karjus & Daisy Smith \\
   
 \end{frame}
 
-\end{document}
 
 \begin{frame}
 \frametitle{Today}
@@ -189,7 +188,7 @@ summary(model)
 \end{block}
 \pause\spc
 \begin{block}{This is RStudio}
-\visible<2->{\cimage[.4167\linewidth]{Labs/img/rstudio1}}
+\visible<2->{\cimage[.4167\linewidth]{img/rstudio1}}
 \end{block}
 \begin{itemize}
 \item RStudio is just one (good) way of `talking to' \R{R}
@@ -217,6 +216,7 @@ load('R/model.Rdata')
   
 \end{frame}
 
+\end{document}
 
 \begin{frame}{Publication-Quality Graphics}
 \cimage{img/ultra-profiles.pdf}
