@@ -218,7 +218,7 @@ load('R/model.Rdata')
 
 
 \begin{frame}{Publication-Quality Graphics}
-\cimage{img/ultra-profiles.pdf}
+\cimage[.9\linewidth]{img/ultra-profiles.pdf}
   
   
 \end{frame}
@@ -277,7 +277,30 @@ plot(x,sapply(x,pHead),pch=20,col='red',xlab='sample size',ylab='p(HHHH)')
 \cimage[.5\linewidth]{img/auto-heads3-1}  
 \end{frame}
 
-\begin{frame}[fragile]{Almost Anything to do with Data}
+\begin{frame}[fragile]
+  \frametitle{R for Easy Writing}
+  \begin{itemize}
+  \item \R{R} can be combined with \term{Markdown} to produce
+    documents
+  \end{itemize}
+\begin{block}{input}
+\begin{verbatim}
+A **mark-up language** consists of ordinary text, _plus_ signs which
+indicate how to change the formatting. Here we are using **Markdown**
+together with **R**, which means we can include expressions like this:
+the square root of 2 is `r sqrt(2)`.  
+\end{verbatim}
+\end{block}  
+  
+\begin{block}<2->{output}
+A \textbf{mark-up language} consists of ordinary text, \textit{plus} signs which
+indicate how to change the formatting.  Here we are using \textbf{Markdown} together with \textbf{R}, which means we can include expressions like this: the square root of 2 is \Sexpr{sqrt(2)}.
+\end{block}
+\end{frame}
+
+
+
+\begin{frame}[fragile]{R for Anything to do with Data}
 <<PP,fig.width=8,fig.height=8,message=FALSE,cache=TRUE>>=
 require(tm)
 require(wordcloud)
@@ -298,7 +321,6 @@ wordcloud(pp, scale=c(5,0.5), max.words=150, random.order=FALSE, rot.per=0.35, c
 \cimage[.6\linewidth]{img/auto-PP-1}  
 \end{frame}
 
-\end{document}
 
 \begin{frame}{A Huge Community}
   \begin{itemize}
@@ -334,7 +356,7 @@ wordcloud(pp, scale=c(5,0.5), max.words=150, random.order=FALSE, rot.per=0.35, c
 
 
 \begin{frame}{R Usage: Citations in Journal Articles}
-\cimage[.6667\linewidth]{img/articles.png}
+\cimage[.5\linewidth]{img/articles}
 \spc
 \atright{\small\url{http://r4stats.com/articles/popularity/}}
   
@@ -342,21 +364,16 @@ wordcloud(pp, scale=c(5,0.5), max.words=150, random.order=FALSE, rot.per=0.35, c
 
 \begin{frame}{R Usage: Jobs on indeed.com}
 
- \cimage[.6667\linewidth]{img/jobs_indeed}
+ \cimage[.5\linewidth]{img/jobs_indeed}
  \spc
  \atright{\small\url{http://r4stats.com/articles/popularity/}}
  
 \end{frame}  
 
 
-\begin{frame}
-  \frametitle{R Usage: Analytic Professionals}
+\begin{frame}[plain]
 
-\cimage[.6667\linewidth]{img/usage_rexer}
-\spc
-\atright{\small\url{http://bit.ly/1mYNSy7}}
-
-
+\cimage{img/rexer}
 
 \end{frame}
 
