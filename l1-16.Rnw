@@ -396,8 +396,6 @@ wordcloud(pp, scale=c(5,0.5), max.words=150, random.order=FALSE, rot.per=0.35, c
   
 \end{frame}    
 
-\end{document}
-
 \section[Example]{A Toy Experiment}
 
 \subsection{Design}
@@ -408,8 +406,8 @@ wordcloud(pp, scale=c(5,0.5), max.words=150, random.order=FALSE, rot.per=0.35, c
 \begin{itemize}
 \item Idea \ra{} Design
   \begin{itemize}
-  \item roughly, ``how to have research ideas''\footnote{Much more on
-      this in Psychological Research Skills}
+  \item roughly, ``how to have research ideas''\footnote{More on
+      this in other courses}
   \end{itemize}
 \item Design \ra{} Implementation
   \begin{itemize}
@@ -547,7 +545,7 @@ It was \alert<2->{Jamie} who really liked the cider
   \end{itemize}
 
   \end{itemize}
-\pause
+
 \end{frame}
 
 \begin{frame}{Fleshing Things Out II}
@@ -802,7 +800,7 @@ so far, we've only talked about items with changes\ldots{}
 \end{frame}
 
 \begin{frame}{Results}
-\cimage[.9\linewidth]{img/sanford}
+\cimage[.7\linewidth]{img/sanford}
 \end{frame}
 
 \begin{frame}
