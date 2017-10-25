@@ -1,0 +1,904 @@
+\documentclass[compress,11pt,aspectratio=1610]{beamer}
+\usetheme{Luebeck}
+\usecolortheme{crane}
+\setbeamertemplate{navigation symbols}{}
+\usepackage{luebeck-numbers}
+
+%
+\usepackage{nbeamer}
+\usepackage{centeredimage}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage{url}
+\urlstyle{same}
+
+
+\newcommand*{\ars}[1]{\atright{\mbox{\tiny #1}}\\}
+
+\renewcommand{\term}[1]{\textbf{\usebeamercolor[fg]{titlelike}{#1}}}
+
+\newcommand*{\spc}[1][1em]{\vspace*{#1}\par}
+\usepackage{xspace}
+%\usepackage{knitr}
+\newcommand{\R}[1]{\colorbox{shadecolor}{\texttt{\hlstd{\small #1}}}} % R code, requires knitr defs
+\newcommand*{\Resize}[2]{\resizebox{#1}{!}{$#2$}}%
+
+<<setup, include=FALSE>>=
+require(knitr)
+# this bit makes the tildes lower
+.hook_source = knit_hooks$get('source')
+knit_hooks$set(source = function(x, options) {
+  txt = .hook_source(x, options)
+  # extend the default source hook
+  gsub('~', '\\\\textasciitilde{}', txt)
+})
+#
+knit_hooks$set(par=function(before, options, envir){
+if (before && options$fig.show!='none') par(mar=c(5.1,4.1,2.1,2.1))
+}, crop=hook_pdfcrop)
+#
+opts_chunk$set(fig.path='img/auto-',fig.align='center',fig.show='hide',size='scriptsize',warning=FALSE,tidy=TRUE,tidy.opts=list(keep.blank.line=FALSE, width.cutoff=70),fig.width=5,fig.height=4.15,par=TRUE)
+# set everything to handlable numbers of digits (reclaim screen space!)
+options(replace.assign=TRUE,width=70,digits=2)
+#options(mar=c(5.1,4.1,1.1,2.1),cex=2,cex.text=2)
+source('R/preamble.R') # useful functions
+@ 
+
+\renewenvironment{knitrout}{\setlength{\topsep}{0mm}}{}
+
+\title[UMSR~6]{The General Linear Model}
+\subtitle{Correlation and Bivariate Regression}
+\author{Martin Corley}
+\date{}
+
+\begin{document}
+
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+\begin{frame}
+\frametitle{Today}
+\tableofcontents[part=1]
+\tableofcontents[part=2]
+\end{frame}
+\part{Correlation}
+\frame[plain]{\partpage}
+
+\section{Correlation}
+\subsection[Basics]{Basics of Correlation}
+
+\begin{frame}{Correlation}
+\begin{itemize}
+  \item in \term{correlation}, both variables are ordinal or better
+  \item aim of the game is to find out whether they're \emph{related}
+  \item no special status for `IV' or 'DV', \emph{other than by interpretation}
+\spc\pause
+  \item is \emph{blood alcohol} related to \emph{reaction time}?
+\spc\pause
+  \item as \emph{blood alcohol} increases, does \emph{reaction time}
+    change systematically?
+\end{itemize}
+  
+\end{frame}
+
+\begin{frame}{Scatterplot}
+\cimage[.5\linewidth]{img/c5p.pdf}
+\begin{itemize}
+\item each point represents pair of values for one participant
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Simpler Data}
+\cimage[.6\linewidth]{img/cs.pdf}
+\begin{itemize}
+\item does $y$ vary with $x$?
+\item equivalent to asking `does $y$ differ from its mean in the same
+  way that $x$ does?'
+\end{itemize}
+
+\end{frame}  
+\subsection{Covariance}
+
+\begin{frame}{Covariance}
+\cimage[.6\linewidth]{img/distcor.pdf}
+\begin{itemize}
+\item if observations of each variable differ \emph{proportionately} from their means, it's likely the variables are related
+\end{itemize}
+
+  
+\end{frame}
+
+\begin{frame}{Covariance}
+
+\begin{block}{Variance}
+\[
+s^2=\frac{\sum{(x-\bar{x})^2}}{N}\visible<2->{=\frac{\sum{(x-\bar{x})\alert<3-|
+      handout:0>{(x-\bar{x})}}}{N}}
+\]
+\end{block}
+\visible<2->{%
+\begin{block}{Covariance}
+\[
+\textnormal{cov}(x,y)=\frac{\sum{(x-\bar{x})\alert<3-| handout:0>{(y-\bar{y})}}}{N}
+\]
+}
+\end{block}
+
+\end{frame}
+
+
+\begin{frame}{Covariance}
+\begin{overprint}
+\onslide<1| handout:0>
+\cimage[.5\linewidth]{img/sumxy0.pdf}
+\onslide<2-| handout:1>
+\cimage[.5\linewidth]{img/sumxy1.pdf}
+\end{overprint}
+\[
+\textnormal{cov}(x,y)=\frac{\sum{(x-\bar{x})(y-\bar{y})}}{N}
+\visible<3->{=\frac{27.2}{5}=\alert{5.44}}
+\]
+
+
+\end{frame}
+
+
+\begin{frame}{The Problem With Covariance}
+  \begin{itemize}
+  \item covariance expresses the `amount of shared variance'
+  \item but it depends on the \emph{units}
+\spc
+  \item<2-> imagine the last example was in \emph{miles}\ldots{}
+  \item<2-> if we measured the same distances in km, the covariance
+    would be \alert<2->{14.09} instead of 5.44
+\spc
+\item<3-> we need some way to \emph{standardise} covariance
+  \end{itemize}
+
+\end{frame}
+
+\subsection[Coefficients]{Pearson's $r$ \& Spearman's $\rho$}
+
+\begin{frame}{Correlation Coefficient}
+  \begin{itemize}
+  \item the standardised version of covariance is the
+    \term{correlation coefficient}, $r$
+  \end{itemize}
+\spc
+\pause
+
+\[
+r = \frac{\textnormal{covariance}(x,y)}{\textnormal{standard
+    deviation}(x)\cdot\textnormal{standard deviation}(y)}
+\]
+\end{frame}
+
+\begin{frame}{Correlation Coefficient}
+
+\begin{block}{Pearson's Correlation Coefficient}
+\[\Resize{\textwidth}{
+r=\frac{\frac{\sum{(x-\bar{x})(y-\bar{y})}}
+{\alert<2->{N}}}
+{\sqrt{\frac{\sum{(x-\bar{x})^2}}{\alert<2->{N}}}
+  \sqrt{\frac{\sum{(y-\bar{y})^2}}{\alert<2->{N}}}}
+\visible<3->{=\frac{\sum{(x-\bar{x})(y-\bar{y})}}
+{\sqrt{\sum{(x-\bar{x})^2}}\sqrt{\sum{(y-\bar{y})^2}}}}}
+\]
+
+\end{block}
+
+\pause[4]
+\[=\frac{27.2}{\sqrt{33.2}\sqrt{29.2}}=\frac{27.2}{5.76\cdot{}5.40}=\frac{27.2}{31.14}=\alert{0.87}\]
+
+\end{frame}
+
+\begin{frame}{Spearman's $\rho$}
+
+\begin{block}{Spearman's Correlation Coefficient}
+Spearman's $\rho$ is calculated in \emph{exactly the same way}
+    as Pearson's $r$, but uses the \term{ranks} of $x$ and $y$ ($x_r$
+    and $y_r$) instead of their \emph{values}
+\spc[.5em]
+
+\[
+\rho=\frac{\sum{(x_r-\bar{x_r})(y_r-\bar{y_r})}}
+{\sqrt{\sum{(x_r-\bar{x_r})^2}}\sqrt{\sum{(y_r-\bar{y_r})^2}}}
+\]
+\end{block}
+
+\begin{itemize}
+\item for our toy data, $\rho=\alert{0.9}$
+\end{itemize}
+
+\end{frame}
+
+
+\section[Interpreting]{Interpreting Correlation}
+\subsection{Scatterplots}
+
+\begin{frame}{Correlation Coefficient}
+  \begin{itemize}
+  \item measure of \emph{how related} two variables are
+\spc
+  \item $-1 \le r \le 1$ ($\pm{}1=$ perfect fit, $0=$ no fit)
+  \item \emph{sign} tells you direction of slope
+  \end{itemize}
+\begin{columns}
+\column{.49\linewidth}
+\cimage[.6\linewidth]{img/c30p70.pdf}
+\begin{itemize}
+\item $r=0.7$
+\end{itemize}
+\column{.49\linewidth}
+\cimage[.6\linewidth]{img/c30n70.pdf}
+\begin{itemize}
+\item $r=-0.7$
+\end{itemize}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}{Scatterplots}
+\cimage[.7\linewidth]{img/manyc.pdf}
+\end{frame}
+
+\subsection[Significance]{Statistical Significance}
+
+\begin{frame}{Significance of a Correlation}
+  \begin{itemize}
+  \item we can measure a correlation using $r$ or $\rho$ as appropriate
+  \item we want to know whether that correlation is \emph{significant}
+    \begin{itemize}
+    \item i.e., whether the probability of finding it \emph{by chance}
+      is low enough
+    \end{itemize}
+\spc\pause
+  \item cardinal rule in NHST: compare everything to chance
+\spc
+  \item let's investigate...
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Random Correlations}
+  \begin{itemize}
+  \item pick 5 pairs of numbers at random\ldots
+\item
+\begin{tabular}{crrrrr}
+\textbf{y}&66&58&98&88&38\\
+\textbf{x}&42&56&6&44&73\\
+\end{tabular}
+\end{itemize}
+\spc[.5em]
+
+\visible<2->{\cimage[.5\linewidth]{img/randcor0.pdf}}
+\end{frame}
+
+\begin{frame}{Random Correlations}
+\cimage[.75\linewidth]{img/randcor1.pdf}
+\end{frame}
+
+\begin{frame}{Lots of Random Correlations}
+\begin{columns}
+\column{.49\linewidth}
+  \begin{itemize}
+  \item histogram of random correlations
+  \item (here, 1000 samples of 5 random pairs)
+  \end{itemize}
+\column{.39\linewidth}
+\begin{overprint}
+\onslide<1| handout:0>
+\cimage{img/cor050.pdf}
+\onslide<2-| handout:1>
+\cimage{img/cor051.pdf}
+\end{overprint}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Lots of Random Correlations}
+\begin{columns}
+\column{.39\linewidth}
+\cimage{img/cor15.pdf}
+\column{.39\linewidth}
+\cimage{img/cor30.pdf}
+\end{columns}
+\end{frame}
+
+\begin{frame}{As the Sample Tends to $\infty$}
+\begin{columns}
+\column{.39\linewidth}
+\cimage{img/cor10K.pdf}
+\column{.49\linewidth}
+\begin{itemize}
+\item distribution of random $r$s is $t$ distribution
+  \[t=r\sqrt{\frac{N-2}{1-r^2}}\]
+\item makes it `easy' to calculate probability of getting $r$ for
+  sample size $N$ \emph{by chance}
+\item in practice, use look-up tables
+\end{itemize}
+\end{columns}
+\end{frame}
+
+\subsection{Caveats}
+
+\begin{frame}{Beware False Positives}
+  \begin{itemize}
+  \item correlations assume a \emph{linear} relationship
+  \item but the relationship might be something else\ldots{}
+  \end{itemize}
+\spc
+\visible<2->{\cimage[.6\linewidth]{img/curve.pdf}}
+
+  
+\end{frame}
+  
+\begin{frame}{Beware False Positives}
+\begin{overprint}
+\onslide<1| handout:1>
+\cimage[.6\linewidth]{img/corout0.pdf}
+\onslide<2-| handout:0>
+\cimage[.6\linewidth]{img/corout1.pdf}
+\end{overprint}
+\begin{itemize}
+\item<2-> correlation driven by a few unusual observations
+\item<2-| alert@2> always look at scatterplots together with calculations
+\end{itemize}
+\end{frame}
+
+
+
+
+\begin{frame}{Interpreting Correlation}
+  \begin{itemize}
+  \item<alert@1> correlation does not imply causation
+  \item correlation merely suggests that two variables are related
+  \end{itemize}
+\end{frame}
+
+% \begin{frame}{Storks}
+%   \cimage[.6\linewidth]{img/storks}
+% \ars{(adapted from Sies, 1988)}
+% \pause
+% \begin{itemize}
+% \item numbers of storks are related to numbers of baby births ($r =
+%   0.95$, $p=0.0009$)
+% \item storks bring babies
+% \end{itemize}
+% \end{frame}
+
+\begin{frame}{Pirates}
+\cimage[.6\linewidth]{img/PiratesVsTemp.png}
+\pause
+\begin{itemize}
+\item clear negative correlation between numbers of pirates and mean global temperature
+\item[\ra] we need pirates to combat global warming 
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Books}
+\cimage[.6\linewidth]{img/books1.pdf}
+\begin{itemize}
+\item sample of books suggests that books with more pages cost less
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Books}
+\cimage[.6\linewidth]{img/books2.pdf}
+\begin{itemize}
+\item hardbacks and softbacks mixed together
+\item an example of the \term{third variable} problem\ars{(Utts, 1996)}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Correlation}
+  \begin{itemize}
+  \item correlation tests for the \emph{relationship} between two variables
+  \item \emph{interpretation} of that relationship is key
+  \item never rely on statistics such as $r$ without looking at your data
+  \end{itemize}
+
+  
+\end{frame}
+
+\part{Regression}
+\frame[plain]{\partpage}
+
+\section{Regression}
+\subsection[Intro]{Introduction}
+
+\begin{frame}[fragile]
+  \frametitle{A Word-Naming Experiment}
+  \framesubtitle{using entirely fictitious data}
+<<getdata>>=
+load(url('https://is.gd/refnet'))
+ls()
+summary(naming)
+@ 
+\pause
+\begin{itemize}
+\item \R{RT} = naming-aloud times (for 240 words)
+\item \R{length} in characters
+\item \R{freq} in wpm
+\item \R{pos}: \R{N}oun, \R{V}erb, or \R{A}djective
+\end{itemize}
+  
+
+  
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{A Subset of the Data}
+\begin{overprint}
+  \onslide<1| handout:0>
+<<sample,eval=F>>=
+n2 <- naming[sample(length(naming[,1]),24),]
+with(n2,plot(RT ~ freq,pch=16))
+@ 
+<<sample2,echo=F>>=
+p <- 1
+while (p > .05) {
+    n2 <- naming[sample(length(naming[,1]),24),]
+    t <- cor.test(n2$RT,log(n2$freq+1))
+    p <- t$p.value
+    }
+with(n2,plot(RT ~ freq,pch=16))
+@ 
+\cimage[.5\linewidth]{img/auto-sample2-1}
+\onslide<2| handout:1>
+<<sample3>>=
+with(n2, plot (RT ~ log(freq+1),pch=16))
+@ 
+\cimage[.5\linewidth]{img/auto-sample3-1}\par
+\centering{\scriptsize{{(NB., add 1 to freq to avoid \R{log(0)})}}}
+\end{overprint}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Correlation}
+  \begin{itemize}
+  \item is word frequency related to time to name a word?
+  \end{itemize}
+
+  
+<<cor>>=
+# could use 
+# cor.test(~RT+log(freq+1),data=n2)
+with(n2,cor.test(RT,log(freq+1)))
+@ 
+\pause
+\begin{itemize}
+\item yes it is, negatively
+\item RT goes down as frequency goes up
+\item but is that really \emph{all} we can say?
+\end{itemize}
+
+\end{frame}
+
+
+\subsection[Basics]{Basics of Regression}
+
+\begin{frame}{The Only Equation You Will Ever Need}
+\begin{alertblock}{A General Model of Observed Data}
+\[
+  \text{outcome}_i=(\text{model})+\text{error}_i
+\]
+\end{alertblock}
+\spc
+\begin{itemize}
+\item<2-> to get further, we need to make \emph{assumptions}
+\item<2-> nature of the \term{model}\atright{\uncover<3->{\alert<4>{(linear)}}}
+\item<2-> nature of the \term{errors}\atright{\uncover<3->{(normal)}}
+\end{itemize}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{Linear Models}
+
+  
+<<intslop,echo=F>>=
+curve(5+2*x,from=-1,to=4,ylim=c(0,14),frame.plot=F,ylab='y=5+2x')
+arrows(0,0,0,5,lwd=3,col='red',code=3,length=0.15)
+text(0.1,2,pos=4,"intercept",col='red')
+lines(x=c(1,2.5),y=c(7,7),lty='dashed',lwd=2,col='blue')
+arrows(2,7,2,9,lwd=3,col='blue',code=3,length=0.15)
+text(2.1,8,pos=4,"slope",col='blue')
+@   
+\cimage[.48\linewidth]{img/auto-intslop-1}
+\pause
+\begin{block}{Linear Model}
+\centering{$\hat{y_i}={b_0}\visible<1-2>{\cdot\textcolor<2>{red}{1}} + b_1\cdot\textcolor<2-3>{blue}{x_i}$\\
+\visible<2-3>{\texttt{y \textasciitilde{} \visible<2>{\textcolor{red}{1} +} \visible<2-3>{\textcolor{blue}{x}}}}}
+\end{block}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{A Linear Model}
+<<lm1,echo=F>>=
+m1 <- lm(RT~log(freq+1),data=n2)
+with(n2, plot (RT ~ log(freq+1),pch=16))
+abline(m1,col='red',lwd=2)
+@ 
+<<lm2,echo=F>>=
+with(n2, plot (RT ~ log(freq+1),pch=16))
+abline(m1,col='red',lwd=2)
+t0 <- log(n2$freq+1)*coef(m1)[2]+coef(m1)[1]
+for (i in c(1:length(t0))) {
+  lines(x = c(log(n2$freq[i]+1),log(n2$freq[i]+1)),y= c(n2$RT[i],t0[i]),col='blue')
+ }
+@ 
+\begin{overprint}
+  \onslide<1| handout:0>
+\cimage[.6\linewidth]{img/auto-lm1-1}
+\onslide<2| handout:1>
+\cimage[.6\linewidth]{img/auto-lm2-1}
+\end{overprint}
+\begin{itemize}
+  \item a linear model describes the best line through the data
+  \item<2-> the best-fit line minimizes the \textcolor{blue}{residuals}
+  \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{Residuals}
+\begin{itemize}
+\item each $\hat{y_i}$ is an \emph{estimate} according to the model
+\item the \emph{real} observation for each $x_i$ is $y_i$
+\item<2-> $y_i - \hat{y_i}$ is the \term{residual}, $\epsilon_i$
+\end{itemize}
+\pause[2]
+\spc
+\begin{columns}
+  \column{.49\linewidth}
+  \[\hat{y_i}=b_0 + b_1x_i\]
+  \centering{the best-fit line}
+  \column{.49\linewidth}
+  \[\alert<2->{y_i=b_0+b_1x_i + \epsilon_i}\]
+  \centering{the data}
+\end{columns}
+\end{frame}
+
+
+
+\begin{frame}{Total Sum of Squares ($\text{SS}_\text{total}$)}
+\[ \text{SS}_\text{total}=\sum(y-\bar{y})^2 \]
+\begin{columns}
+  \column{.49\linewidth}
+\begin{itemize}
+
+  \item sum of squared differences between observed $y$ and mean $\bar{y}$
+  \item how much does the observed data vary from a model which says
+    `there is no effect of $x$' (\term{null model})?
+  \end{itemize}
+\column{.49\linewidth}
+<<ss3,echo=F>>=
+with(n2,plot(RT~log(freq+1),pch=16))
+model1 <- lm(RT~1,data=n2)
+abline(model1,lwd=2,col='red')
+t1 <- 0*log(n2$freq+1)+coef(model1)
+for (i in c(1:length(t1))) {
+  lines(x <- c(log(n2$freq[i]+1),log(n2$freq[i]+1)),y <- c(n2$RT[i],t1[i]),col='blue')
+}
+@ 
+\cimage{img/auto-ss3-1}
+\end{columns}  
+\end{frame}
+
+
+
+\begin{frame}{Residual Sum of Squares ($\text{SS}_\text{residual}$)}
+\[ \text{SS}_\text{residual}=\sum(y-\hat{y})^2 \]
+\begin{columns}
+  \column{.49\linewidth}
+\begin{itemize}
+
+  \item sum of squared differences between observed $y$ and predicted $\hat{y}$
+  \item how much does the observed data vary from the existing model?
+  \end{itemize}
+\column{.49\linewidth}
+  \cimage{img/auto-lm2-1}  
+\end{columns}
+\end{frame}
+
+\begin{frame}{Model Sum of Squares ($\text{SS}_\text{model}$)}
+\[\begin{split} 
+\text{SS}_\text{model} & =\sum(\hat{y}-\bar{y})^2\\
+& = \text{SS}_\text{total}-\text{SS}_\text{residual}
+\end{split}\]
+\begin{columns}
+  \column{.49\linewidth}
+\begin{itemize}
+
+  \item sum of squared differences between predicted $\hat{y}$ and mean $\bar{y}$
+  \item how much does the existing model vary from the null model?
+  \end{itemize}
+\column{.49\linewidth}
+<<ss4,echo=F>>=
+with(n2,plot(RT~log(freq+1),pch=16))
+abline(m1,lwd=2,col='red')
+abline(model1,lwd=2,col='red')
+for (i in c(1:length(t0))) {
+  lines(x <- c(log(n2$freq[i]+1),log(n2$freq[i]+1)),y <- c(t0[i],t1[i]),col='blue')
+}
+@ 
+\cimage{img/auto-ss4-1}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Testing the Model: $R^2$}
+  \begin{block}{How much of the variance does the model account for?}
+    \[R^2=\frac{\text{SS}_\text{model}}{\text{SS}_\text{total}}\]
+    \begin{itemize}
+    \item indicates how much the model improves the prediction of
+      $\hat{y}$ over the null model
+    \end{itemize}
+    
+  \end{block}
+
+\begin{itemize}
+\item $O \le R^2 \le 1$
+\item we want $R^2$ to be \emph{large}
+\pause
+\item for a single predictor, $\sqrt{R^2}=|r|$ (where $r$ is Pearson's
+  correlation coefficient)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Testing the Model: $F$}
+  \begin{itemize}
+  \item $F$-ratio depends on \term{mean squares}
+  \item $\text{MS}_x=\text{SS}_x/\text{df}_x$  
+  \end{itemize}
+  
+\begin{block}{How much does the model improve over chance?}
+\[F=\frac{\text{MS}_\text{model}}{\text{MS}_\text{residual}}\]
+\begin{itemize}
+\item indicates how much better the model predicts $\hat{y}$ compared
+  to chance
+\end{itemize}
+  
+\end{block}  
+\begin{itemize}
+\item $0 < F$
+\item we want $F$ to be \emph{large}
+\pause\spc
+\item significance of $F$ does not always equate to a large (or
+  theoretically sensible) effect
+\end{itemize}
+
+\end{frame}
+
+
+\subsection{Example}
+
+\begin{frame}<2>[t,fragile]
+  \frametitle{This Time, for Real}
+\begin{overprint}
+  \onslide<1| handout:0>
+<<plotme1>>=
+with(naming, plot(RT ~ freq))
+@ 
+\cimage[.6\linewidth]{img/auto-plotme1-1}
+  \onslide<2| handout:1>
+<<plotme2>>=
+with(naming, plot(RT ~ log(freq+1)))
+@ 
+\cimage[.6\linewidth]{img/auto-plotme2-1}
+\end{overprint}
+\end{frame}
+
+
+\begin{frame}[fragile]{Correlation}
+\begin{columns}
+  \column{.5\linewidth}
+  \cimage{img/auto-plotme2-1}
+  \column{.39\linewidth}
+  \[t=r\sqrt{\frac{N-2}{1-r^2}}\]  
+\end{columns}
+<<cor.special>>=
+with(naming,cor(RT,log(freq+1))) -> r
+r
+pt(r*sqrt((length(naming[,1]-2)/(1-r^2))),df=22)
+@   
+\end{frame}
+
+
+\begin{frame}[t,fragile]
+  \frametitle{This Time, for Real}
+
+  \begin{overprint}
+    \onslide<1| handout:0>
+<<plotmeN,eval=F>>=
+with(naming,plot (RT ~ log(freq+1)))
+@ 
+<<plotmeN2,echo=F>>=
+with(naming,plot (RT ~ log(freq+1)))
+text(6.5,975,paste0('r=',round(cor(naming$RT,log(naming$freq+1)),3)),cex=1.2)
+@ 
+\cimage[.5\linewidth]{img/auto-plotmeN2-1}
+\onslide<2| handout:1>
+<<plotme3a,eval=F>>=
+with(naming, plot(RT ~ log(freq+1)))
+@ 
+<<plotme3b,echo=F>>=
+with(naming, plot(RT ~ log(freq+1)))
+abline(lm(RT~log(freq+1),data=naming),col='red',lwd=2)
+@ 
+\cimage[.5\linewidth]{img/auto-plotme3b-1}
+\end{overprint}
+\begin{itemize}
+\item<2-> a linear model can tell us more about the data\ldots{}
+\end{itemize}
+\end{frame}
+
+  
+
+\begin{frame}[fragile]
+  \frametitle{A Simple Linear Model}
+<<doit0,eval=F>>=
+model <- lm (RT ~ log(freq+1), data=naming)
+summary(model)
+@ 
+<<doit1,echo=F>>=
+model <- lm (RT ~ log(freq+1), data=naming)
+.pp(summary(model),l=list(c(2:3),-3))
+@ 
+  \begin{itemize}
+  \item $R^2$ and $F$ are basic indicators of how `good' a model is
+  \item part of R's output when summarising an \R{lm} object
+\item we'll revisit adjusted $R^2$ later
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{A Simple Linear Model}
+<<doit2,eval=F>>=
+summary(model)
+@ 
+<<doit3,echo=F>>=
+.pp(summary(model),l=list(c(2:12),0))
+@   
+\begin{itemize}
+\item glancing at \R{Residuals} gives an indication of whether they
+  are roughly symmetrically distributed
+\item the \R{Coefficients} give you the model
+\item the \R{Estimate} for \R{(intercept)} is $b_0$
+\item the \R{Estimate} for \R{log(freq + 1)} is $b_1$, the \term{slope}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Coefficients}
+<<sumlm99,echo=F>>=
+.pp(summary(model),l=list(c(10:12)))
+@   
+\begin{itemize}
+\item \emph{independently} of whether the model fit is `good',
+  coefficients can tell us about our data
+\spc
+\item here, the \R{(Intercept)} $b_0$ isn't that useful
+  \begin{itemize}
+  \item[\ra] it takes
+    \Sexpr{.rround(coef(model)[1],0)}ms to name `zero-frequency words'
+  \end{itemize}
+\spc
+  \pause
+\item but the slope $b_1$ of \R{log(freq + 1)} is quite informative
+  \begin{itemize}
+  \item[\ra] words are named \Sexpr{.rround(-coef(model)[2],0)}ms
+    faster per unit increase
+    
+\item this is a significant finding
+  
+\item calculated from the estimated coefficient and its
+  \R{Std.\@ Error}, using the $t$ distribution
+  \end{itemize}
+\end{itemize}
+\end{frame}  
+
+
+\subsection{Visualisation}
+
+
+\begin{frame}[fragile]
+  \frametitle{Visualisation (using \texttt{predict()})}
+<<niceplot0,echo=F>>=
+nf <- sort(log(naming$freq + 1))
+y <- predict(model,list(freq=exp(nf)),interval='c')
+with(naming,plot(RT~log(freq+1)))
+matlines(nf,y,col=c('red','blue','blue'),lwd=c(2,1,1),lty=c(1,2,2))
+@ 
+\cimage[.55\linewidth]{img/auto-niceplot0-1}
+\begin{center}
+{\small (confidence intervals for the \emph{model})}
+\atright{\hyperlink{cont}{\beamerskipbutton{skip scaling}}}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile,shrink=5]
+  \frametitle{Scaling of Predictors}
+
+  \begin{itemize}
+  \item `words of zero frequency' may not be very meaningful
+  \item can \term{rescale} predictor to make interpretation more useful
+  \item can also be used to ameliorate collinearity
+  \end{itemize}
+<<scaled,eval=F>>=
+model.S <- lm(RT ~ I(log (freq+1) - mean(log(freq+1))), data=naming)
+summary(model.S)
+@ 
+\pause
+<<scaled1,echo=F>>=
+lf <- scale(log(naming$freq+1),scale=F)
+model.S <- lm(RT ~ I(lf), data=naming)
+.pp(summary(model.S),0,-10)
+rm(lf)
+@ 
+
+\begin{itemize}
+  \item slope unchanged
+\item \Sexpr{.rround(coef(model.S)[1],0)}ms corresponds to words of mean log frequency
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Scaling of Predictors}
+  
+  \begin{itemize}
+  \item \emph{linear} scaling of predictors doesn't change model fit
+  \end{itemize}
+
+<<sc>>=
+summary(model)$r.squared
+summary(model.S)$r.squared
+summary(lm(RT ~ I(5 * log(freq + 1)), data=naming))$r.squared
+@ 
+
+\begin{itemize}
+\item \emph{non-linear} scaling---like \R{log()} above---changes fit 
+\end{itemize}
+
+<<sc2>>=
+summary(lm(RT ~ freq, data=naming))$r.squared
+@ 
+
+\end{frame}
+
+
+
+
+\begin{frame}[fragile,label=cont]
+  \frametitle{Visualisation (using \texttt{predict()})}
+<<niceplot1,echo=F>>=
+nf <- sort(log(naming$freq + 1))
+y <- predict(model,list(freq=exp(nf)),interval='p')
+with(naming,plot(RT~log(freq+1)))
+matlines(nf,y,col=c('red','blue','blue'),lwd=c(2,1,1),lty=c(1,2,2))
+@ 
+\cimage[.5\linewidth]{img/auto-niceplot1-1}
+\begin{center}
+{\small (confidence intervals for \emph{predicted observations})}
+\end{center}
+\end{frame}
+
+
+
+
+% {\usebackgroundtemplate{\includegraphics[width=\paperwidth]{img/fireworks}}
+% \begin{frame}<handout:0>[t,plain]
+% ~
+% \end{frame}}
+
+
+\end{document}
+
