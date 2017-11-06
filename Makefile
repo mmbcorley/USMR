@@ -1,4 +1,4 @@
-objects = l1-16.pdf l6-16.pdf
+objects = l1-16.pdf l6-16.pdf l7-16.pdf
 
 # shouldn't need any changes below here
 
