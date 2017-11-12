@@ -1,0 +1,945 @@
+% File: l8.Rnw
+% Time-stamp: <>
+% $Id$
+%
+% Author: Martin Corley
+
+\documentclass[compress,11pt,aspectratio=1610]{beamer}
+\usetheme{Luebeck}
+\usecolortheme{crane}
+\setbeamertemplate{navigation symbols}{}
+\usepackage{luebeck-numbers}
+
+%
+\usepackage{nbeamer}
+\usepackage{centeredimage}
+%\usepackage{mathptmx,helvet,courier}
+%\usepackage{cmbright}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+%\usepackage{colortbl}
+\usepackage{url}
+\urlstyle{same}
+\usepackage[normalem]{ulem}
+
+%\usepackage{multimedia}
+\newcommand*{\ars}[1]{\atright{\mbox{\tiny #1}}\\}
+%\renewcommand{\term}[1]{\textbf{\textcolor{red!50!black}{#1}}}
+\renewcommand{\term}[1]{\textbf{\usebeamercolor[fg]{titlelike}{#1}}}
+\newcommand*{\spc}[1][1em]{\vspace*{#1}\par}
+\usepackage{xspace}
+\renewenvironment{knitrout}{\setlength{\topsep}{0mm}}{}
+\newcommand{\R}[1]{\colorbox{shadecolor}{\texttt{\hlstd{\small #1}}}} % R code, requires knitr defs
+\newcommand*{\Resize}[2]{\resizebox{#1}{!}{$#2$}}%
+
+<<setup, include=FALSE>>=
+require(knitr)
+# this bit makes the tildes lower
+.hook_source = knit_hooks$get('source')
+knit_hooks$set(source = function(x, options) {
+  txt = .hook_source(x, options)
+  # extend the default source hook
+  gsub('~', '\\\\textasciitilde{}', txt)
+})
+#
+knit_hooks$set(par=function(before, options, envir){
+if (before && options$fig.show!='none') par(mar=c(5.1,4.1,2.1,2.1))
+}, crop=hook_pdfcrop)
+#
+opts_chunk$set(fig.path='img/auto-',fig.align='center',fig.show='hide',size='scriptsize',warning=FALSE,tidy=TRUE,tidy.opts=list(keep.blank.line=FALSE, width.cutoff=70),fig.width=5,fig.height=4.15,par=TRUE)
+# set everything to handlable numbers of digits (reclaim screen space!)
+options(replace.assign=TRUE,width=70,digits=2)
+#options(mar=c(5.1,4.1,1.1,2.1),cex=2,cex.text=2)
+source('R/preamble.R') # useful functions
+### apparent issue with Rscript
+require(methods)
+set.seed(271271)
+@ 
+
+
+\title[USMR~8]{The General Linear Model}
+\subtitle{Standardization, Interactions, Effects Coding}
+\author{Martin Corley}
+\date{}
+
+\begin{document}
+
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+ 
+\begin{frame}
+\frametitle{Today}
+\tableofcontents[part=1]
+\tableofcontents[part=2]
+\tableofcontents[part=3]
+\end{frame}
+
+\part{Standardisation}
+\begin{frame}[plain]
+  \partpage
+\end{frame}
+
+\section[Standardisation]{Standardisation}
+\subsection[Recap]{Recap of Last Week's Model}
+
+<<getdata,include=FALSE>>=
+load(url('https://is.gd/refnet'))
+@ 
+
+\begin{frame}[fragile]{Multiple Regression}
+
+\begin{block}{Specific Model for Multiple Regression}
+\[y_i=b_0+b_1x_{1i}+b_2x_{2i}+ \ldots{} +b_nx_{ni}+\epsilon_i\]
+\end{block}
+\spc[3em]\pause
+\begin{itemize}
+\item does word length have an effect on naming time (over and above frequency)?
+\end{itemize}
+<<aiq>>=
+model2 <- lm(RT ~ log(freq+1) + length,data=naming)
+@ 
+\end{frame}
+
+\begin{frame}[fragile]{Three Evaluations}
+\begin{block}{Is each model an improvement over the previous?}
+<<anova>>=
+anova(model2)  
+@ 
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Three Evaluations}
+\begin{block}{How much variance is explained?}
+<<lmc,eval=FALSE>>=
+summary(model2)
+@   
+<<lmd,echo=FALSE>>=
+.pp(summary(model2),l=list(0,c(17:19)))
+@ 
+\end{block}
+\end{frame}
+
+
+\begin{frame}[fragile]{Three Evaluations}
+\begin{block}{What do the coefficients tell us?}
+<<lma,eval=FALSE>>=
+summary(model2)
+@ 
+<<lmb,echo=FALSE>>=
+.pp(summary(model2),l=list(0,c(9:15),0))
+@ 
+\end{block}
+\end{frame}
+
+\begin{frame}{\xout{Three} Four Evaluations}
+\begin{block}{Do the model assumptions hold?}
+<<pl8,include=F>>=
+par(mfrow=c(2,2))
+plot(model2,which=c(1:4))
+@   
+\cimage[.6\linewidth]{img/auto-pl8-1}  
+\end{block}
+\end{frame}
+
+
+
+\subsection[Scaling Coefficients]{A Different Way of Scaling}
+
+\begin{frame}{Interpreting Coefficients}
+  \begin{itemize}
+  \item we now know that:
+    \begin{itemize}
+    \item for each additional unit of log frequency, naming time is
+      \alert<2->{\Sexpr{abs(round(coef(model2)[2],1))}~ms quicker}
+    \item for each additional character length, naming time is
+      \alert<2->{\Sexpr{abs(round(coef(model2)[3],1))}~ms slower} 
+    \end{itemize}
+\pause\spc
+\item which is the `more important' effect?
+\pause
+\begin{itemize}
+\item difficult to evaluate, because predictors are on different
+  scales
+\item how do we compare `1 unit log frequency' with `1 character'?
+\spc
+\item[\ra] \term{standardisation} 
+\end{itemize}
+\end{itemize}
+
+  
+\end{frame}
+
+\begin{frame}[fragile]{Standardisation}
+  
+  \begin{itemize}
+  \item assuming that our predictors are roughly normal
+    \visible<2->{we can \term{scale} them using $z$-scores}
+  \end{itemize}
+\begin{overprint}  
+<<fhist,fig.width=9,fig.height=3,include=F>>=
+par(mfrow=c(1,2))
+with(naming,hist(log(freq+1),col='gray'))
+with(naming,hist(length,col='gray'))
+@   
+\onslide<1| handout:0>
+\cimage[.8\linewidth]{img/auto-fhist-1}
+\onslide<2| handout:1>
+\[
+ z_i=\frac{x_i - \bar{x}}{\sigma_x}
+\]
+<<sli2>>=
+model2.s <- lm(scale(RT)~scale(log(freq+1))+scale(length),
+               data=naming)
+@ 
+\end{overprint}
+\end{frame}
+
+\begin{frame}[fragile]{Scaled Model}
+
+
+\begin{itemize}
+\item what is the $R^2$ of the new model?
+\end{itemize}
+\pause
+<<r2s>>=
+summary(model2)$r.squared
+summary(model2.s)$r.squared
+@ 
+\pause
+\begin{itemize}
+\item the new model has the \emph{same fit} as the original
+\item coefficients are interpreted in terms of \emph{1~sd change}
+\end{itemize}
+<<mods,eval=F>>=
+summary(model2.s)
+@ 
+<<mods2,echo=F>>=
+.pp(summary(model2.s),l=list(0,c(12:14),0))
+@ 
+\begin{itemize}
+\item<4->[\ra] frequency has a bigger effect (but effects
+  are small!)
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Lazy Scaling}
+  
+  \begin{itemize}
+  \item we can convert `raw' coefficients $b$ to standardised
+    coefficients $\beta$ without re-running the regression
+  \item for predictor $x$ of outcome $y$:
+  \end{itemize}
+  \[
+     \beta_x=b_x \times{} \frac{\sigma_x}{\sigma_y}
+  \]
+\pause
+\begin{itemize}
+\item or there's a function to do it for you:
+\end{itemize}
+<<scs,message=F>>=
+require(lsr)
+
+standardCoefs(model2)
+@   
+  
+
+\end{frame}
+
+
+\part{Effects Coding}
+\begin{frame}[plain]
+\transdissolve
+\partpage
+\end{frame}
+
+\section{Effects Coding}
+\subsection[Intro]{Introduction: Factors in Research}
+\begin{frame}{Factors in Regression}
+\cimage[.8\linewidth]{img/Lucky_Ruler}  
+  \begin{itemize}
+    
+  \item to date, we've been using continuous measures as predictors
+  \item[\ra] \term{ratio}, \term{interval}, \term{ordinal} predictors
+    \spc\pause
+  \item in many analyses we want to compare \emph{situations}
+    \item[\ra] use \term{factors} \ra{} \term{nominal} predictors
+  \end{itemize}
+  \spc
+\visible<2->{\cimage[.8\linewidth]{img/apples}}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{A Toy Example}
+\framesubtitle{Which Apples are Tastiest?}
+<<maked>>=
+apples <- data.frame(
+    colour = gl(2,2,8,labels=c('green','red')),
+    taste = runif(8,1,7)
+    )
+apples
+@ 
+\pause[2]
+\begin{itemize}
+\item which apples are the tastiest?
+\end{itemize}
+\[
+\alert<1-2| handout:0>{\text{outcome}_i=(\text{model})+\text{error}_i}
+\]
+\uncover<3->{%
+\[
+\alert<3->{\text{taste}_i = (\text{some function of colour}) + \epsilon_i}
+\]
+}
+\end{frame}
+
+\subsection[Dummy]{Dummy Coding}
+
+\begin{frame}[fragile]{A Toy Example}
+  \framesubtitle{Quantifying a Nominal Predictor}
+<<maked2>>=
+apples$redness <- ifelse(apples$colour == 'red',1,0)
+apples
+@   
+\pause
+\begin{itemize}
+\item this maps to a linear model
+\end{itemize}
+\[
+\text{taste}_i = \textcolor<3>{green}{b_0} +
+  \textcolor<4->{red}{b_1
+  \cdot \text{redness}} + \epsilon_i
+\]
+\begin{itemize}
+\item<3-> $\overline{\text{taste}}$ for green apples = intercept
+\item<4-> `change due to redness' = slope
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{A Toy Example}
+  \framesubtitle{Of Little Practical Value}
+<<amod>>=
+model <- lm(taste~redness,data=apples)
+summary(model)
+@ 
+\end{frame}
+
+
+\begin{frame}{A Toy Example}
+\subtitle{What The Model Says}  
+<<makep,include=F>>=
+plot(NULL,ylim=c(0,9),xlim=c(-.1,1.1),axes=F,ann=F)
+box()
+axis(1,at=c(0,1),labels=c('0/green','1/red'))
+axis(2,at=c(0,3,6,9))
+with(apples,points(redness,taste,col=(3-redness),pch=16,cex=3))
+plot(NULL,ylim=c(0,9),xlim=c(-.1,1.1),axes=F,ann=F)
+box()
+axis(1,at=c(0,1),labels=c('0/green','1/red'))
+axis(2,at=c(0,3,6,9))
+with(apples,points(redness,taste,col=(3-redness),pch=16,cex=3))
+abline(model)
+@   
+\begin{overprint}
+\onslide<1| handout:0>
+\cimage[.7\linewidth]{img/auto-makep-1}
+\onslide<2| handout:1>
+\cimage[.7\linewidth]{img/auto-makep-2}
+\end{overprint}
+\begin{itemize}
+\item<2-> there's no real difference between this and a linear model
+\item<2-> \emph{except} that drawing a `best fit line' is misleading
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{A Toy Example}
+  \framesubtitle{A Better Presentation}
+<<makep2,include=F>>=
+source("~/cd/R/my_bp.R")
+m <- with(apples,tapply(taste,list(colour),mean))
+s <- with(apples,tapply(taste,list(colour),function(x){sd(x)/sqrt(length(x))}))
+my.bp(m,s,col=c('green','red'))
+@   
+\cimage[.7\linewidth]{img/auto-makep2-1}  
+  
+\end{frame}
+
+\begin{frame}[fragile]{A Bigger Example}
+<<get words>>=
+load(url('https://is.gd/refnet'))
+# the next line doesn't have any statistical effect
+naming <- naming[order(naming$RT),]
+head(naming)
+@ 
+<<shit,include=F>>=
+# fix the contrasts (back)
+naming$pos <- relevel(naming$pos,'A')
+@ 
+\begin{itemize}
+\item \alert{NB.}, we've reordered \R{naming} entirely so that we can
+  see examples of all three levels of \R{pos} on the slide
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{A Bigger Example}
+\begin{itemize}
+\item we can discriminate \R{N}ouns from \R{A}djectives as before
+\end{itemize}
+<<nascat>>=
+naming$is.n <- ifelse(naming$pos == 'N',1,0)
+head(naming)
+@ 
+\begin{itemize}
+\item now, \R{is.n} is 1 for \R{N} and 0 for anything else
+\item but our predictor has \emph{3} levels, so we need to repeat the trick
+\end{itemize}
+  
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{A Bigger Example}
+  \framesubtitle{Dummy Coding for Three Levels}
+<<nascat2>>=
+naming$is.v <- ifelse(naming$pos == 'V',1,0)
+head(naming)
+@   
+\begin{overprint}
+\onslide<2| handout:0>
+\begin{itemize}
+\item if \R{is.n} is 1, category is \R{N}
+  
+\item if \R{is.v} is 1, category is \R{V}
+  
+\item if \emph{neither} is 1, it's \R{A}, the \emph{intercept}
+  \begin{itemize}
+  \item[\ra] we don't need another code for \R{A}
+  \end{itemize}
+
+\end{itemize}
+\onslide<3-| handout:1>
+\begin{itemize}
+\item this maps to a linear model
+\end{itemize}
+\[
+\text{RT}_i = b_0 + b_1 \cdot \text{is.n} + b_2 \cdot \text{is.v} + \epsilon_i
+\]
+\begin{itemize}
+\item \emph{individual} coefficients ($b_1$, $b_2$) for \R{N} and
+  \R{V} (compared to \R{A})
+\end{itemize}
+\end{overprint}
+\end{frame}
+
+\begin{frame}[fragile]{A Bigger Example}
+<<run>>=
+model <- lm(RT ~ is.n + is.v, data=naming)
+summary(model)
+@   
+  
+\end{frame}
+
+\begin{frame}{Summary So Far}
+
+\begin{alertblock}{Categorical (Factorial) Predictors}
+  \begin{itemize}
+  \item are treated \emph{exactly} the same as continuous predictors
+  \item all we do is assign some numbers to the various categories
+  \end{itemize}
+\end{alertblock}
+ 
+\spc
+\begin{itemize}
+\item<2-> good news:  \R{R} can assign the numbers for you
+\item<3-> bad news:  there are many different ways of assigning
+  numbers
+\begin{itemize}
+\item<3-> so far, I've shown you \term{dummy} (or `effect') coding
+\item<3-> this is the default in \R{R}
+\end{itemize}
+\item<3-> let's see how \R{R} does it\ldots{}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Coding Re-Explained}
+\begin{block}{Specific Model for 3-Level Factor}
+\[y_i=\alert<2->{b_0}+\alert<3>{b_1f_1}+\alert<4>{b_2f_2}+\alert<2->{\epsilon_i}\]
+\pause
+\begin{center}
+ 
+\begin{tabular}{llrr}
+\hline
+level & (cat) & $f_1$ & $f_2$  \\\hline
+ \alert<2>{1} & \R{A} & \alert<2>{0} & \alert<2>{0} \\
+ \alert<3>{2} & \R{N} & \alert<3>{1} & \alert<3>{0} \\
+ \alert<4>{3} & \R{V} & \alert<4>{0} & \alert<4>{1} \\
+\end{tabular}
+\end{center}
+\end{block}
+\spc
+\pause[5]
+\begin{itemize}
+
+\item coefficients for other levels give \emph{difference from first level}
+\end{itemize}
+
+\end{frame}
+  
+\begin{frame}[fragile]{Coding of Factors is Built In}
+
+<<contr2>>=
+contrasts(naming$pos)
+@ 
+\pause
+\begin{itemize}
+\item so these models are equivalent\ldots{}
+\end{itemize}
+<<models>>=
+model.a <- lm(RT~is.n+is.v,data=naming)
+model.b <- lm(RT~pos, data=naming)
+@ 
+\pause
+<<s1,eval=F>>=
+summary(model.a)
+@ 
+<<s1p,echo=F>>=
+.pp(summary(model.a),l=list(c(10:13)))
+@ 
+<<s2,eval=F>>=
+summary(model.b)
+@ 
+<<s2p,echo=F>>=
+.pp(summary(model.b),l=list(c(10:13)))
+@ 
+
+\end{frame}
+
+\begin{frame}[fragile]{Interpreting Dummy Coding}
+
+<<modcat,eval=F>>=
+summary(model.b)
+@ 
+<<modcat2,echo=F>>=
+.pp(summary(model),l=list(c(10:13)))
+@ 
+
+\begin{itemize}
+\item compared to \R{A}:
+  \begin{itemize}
+  \item \R{N} take the same time to name
+  \item \R{V} take \Sexpr{.rround(coef(model)[3],0)}ms longer to name
+  \end{itemize}
+\spc
+\pause
+\item important to note that the model improves on chance
+\end{itemize}
+
+<<modcatb,echo=F>>=
+.pp(summary(model),l=list(0,c(19:20)))
+@   
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Different Intercept}
+
+  \begin{itemize}
+    
+  \item by default, comparisons are made in \emph{alphabetical order}
+    of factor name
+  \item what if we don't want to use \R{A} as the intercept?
+  \end{itemize}
+
+<<relevel,eval=F>>=
+model <- lm(RT ~ relevel(pos,'V'), data=naming)
+summary(model)
+@ 
+<<relevel2,echo=F>>=
+model <- lm(RT ~ relevel(pos,'V'), data=naming)
+.pp(summary(model),l=list(0,c(10:13)))
+@ 
+
+\spc\pause
+\begin{itemize}
+\item goodness-of-fit is \emph{not affected} by changes to the intercept
+\end{itemize}
+
+<<modcatc,echo=F>>=
+<<modcatb>>
+@  
+
+  
+\end{frame}
+
+\subsection[Orthogonal]{Orthogonal Coding}
+
+\begin{frame}{Other Contrast Codings}
+  \begin{itemize}
+\item there may be a different contrast coding which better suits
+  our research question
+  \item for a predictor with $g$ levels (or `groups'), there are $g-1$
+    possible contrasts
+  \item these can be anything you like (there are a few built in
+    to R)
+  \item usefulness depends on your research question
+  \item contrasts act like `tests of differences of interest' once the
+    model has been fit
+\pause\spc
+  \item<alert@2> model fit is not affected by the choice of
+    contrasts\footnote{for type 1 sums of squares}
+
+    
+\end{itemize}   
+\end{frame}  
+
+\begin{frame}{Orthogonal Contrasts}
+  \framesubtitle{needs 3 or more levels}
+\begin{itemize}  
+  \item orthogonal contrasts are contrasts for which
+  \begin{itemize}
+  \item each column sums to zero
+  \item the row products sum to zero
+  \end{itemize}
+\item this guarantees that no comparison is made twice (the variance
+  is equally distributed between contrasts)
+\spc
+\item orthogonal contrasts can be `hand-built' to test questions of
+  theoretical interest
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile,shrink=5]{Orthogonal Contrasts}
+  \begin{itemize}
+  \item research question: do \R{V} take longer to name than other words?
+    \begin{itemize}
+    \item subquestion: do \R{N} differ from \R{A}?
+    \end{itemize}
+  \end{itemize}
+
+<<c2>>=
+contrasts(naming$pos) <- cbind('ANvV'=c(1/3,1/3,-2/3),
+# compare A+N to V                               
+                               'AvN'=c(1/2,-1/2,0))
+# compare A to N
+contrasts(naming$pos)
+@   
+
+\begin{itemize}
+\item these contrasts are orthogonal
+\end{itemize}
+<<proveit>>=
+# columns sum to zero
+colSums(contrasts(naming$pos))
+# sum of row products is zero
+sum(apply(contrasts(naming$pos),1,prod))
+@ 
+  
+\end{frame}
+
+%%% HERE
+%% \begin{frame}{Orthogonal Contrasts}
+%% \begin{block}{Specific Model for 3-Level Factor}
+%% \[y_i=\alert<2->{b_0}+\alert<3>{b_1f_1}+\alert<4>{b_2f_2}+\alert<2->{\epsilon_i}\]
+%% \pause
+%% \begin{center}
+ 
+%% \begin{tabular}{llrr}
+%% \hline
+%% level & (cat) & $f_1$ & $f_2$  \\\hline
+%%  \alert<2>{1} & \R{A} & \alert<2>{$\frac{1}{3}$} & \alert<2>{$\frac{1}{2}$} \\
+%%  \alert<3>{2} & \R{N} & \alert<3>{$\frac{1}{3}$} & \alert<3>{$-\frac{1}{2}$} \\
+%%  \alert<4>{3} & \R{V} & \alert<4>{$-\frac{2}{3}$} & \alert<4>{0} \\
+%% \end{tabular}
+%% \end{center}
+%% \end{block}
+%% \spc
+%% \pause[5]
+
+%%   \begin{itemize}
+%%   \item interesting
+%%   \end{itemize}
+
+
+
+
+%% \end{frame}
+  
+
+\begin{frame}[fragile]{Orthogonal Contrasts}
+
+<<c3,eval=F>>=
+# NB., the contrasts for pos have changed
+model <- lm(RT~pos, data=naming)
+summary(model)
+@ 
+<<c3b,echo=F>>=
+model <- lm(RT~pos, data=naming)
+.pp(summary(model),l=list(0,c(10:13)))
+@ 
+
+
+\begin{itemize}
+\item model fit remains the same
+\item but coefficients have different interpretations
+\spc
+\item \R{V} take, on average, \Sexpr{.rround(-coef(model)[2],0)}ms
+  longer to name than \R{N} and \R{A} combined
+\item no difference between \R{N} and \R{A}
+\end{itemize}
+\end{frame}  
+
+\begin{frame}{More Contrasts}
+  \begin{itemize}
+  \item a whole bunch of contrasts specialised for different types of
+    question
+  \item \R{R} has functions to help build the more tricky ones
+  \item \R{contr.helmert()}, \R{contr.poly()}, \R{contr.sum()}, etc.
+  \item default is \R{contr.treatment()} (= `dummy', = `effects')
+\spc
+\item<2-> using \R{contrasts()} is \emph{always} equivalent to specifically
+  setting up columns
+\item<2-> many seasoned \R{R} users do these interchangeably,
+  depending on the situation
+  \end{itemize}
+  
+  
+\end{frame}
+
+
+\part{Interactions}
+\begin{frame}[plain]
+  \transdissolve
+\partpage  
+\end{frame}
+\section{Interactions}
+\subsection[Example]{An Example}
+
+\begin{frame}[fragile]
+  \frametitle{Forget  Words}
+<<dmake,include=F>>=
+
+## p1 <- 1
+## p2 <- 1
+
+## while (p1 > .05 || p2 > .05) {
+## self.confidence <- rnorm(100,100,15)
+## coffee <- gl(2,50,labels=c('coffee','tea'))
+## flavour <- runif(100,1,10)*10
+## satisfaction <- .05*self.confidence+2*flavour-(.015*self.confidence*flavour)
+## csat<- .02*self.confidence+3*flavour-(.005*self.confidence*flavour)
+## satisfaction[coffee=='coffee'] <- csat[coffee=='coffee']
+                                        
+##                                         #require(scatterplot3d)
+## #s3d <- scatterplot3d(self.confidence,flavour,satisfaction)
+## soup <- data.frame(sc=self.confidence,fl=flavour,drink=coffee,SAT=satisfaction)
+## soup$SAT <- soup$SAT + rnorm(100,0,15)
+## soup$SAT <- soup$SAT - min(soup$SAT)
+## soup$SAT <- (soup$SAT/max(soup$SAT)) * 100
+## x <- summary(lm(SAT~sc*fl,data=soup))
+## y <- summary(lm(SAT~fl*coffee,data=soup))
+## p1 <- x$coefficients[4,4]
+## p2 <- y$coefficients[4,4]
+## } 
+
+## save(soup,file='R/l8.Rdata')
+
+load('R/l8.Rdata')
+coffee <- soup
+rm(soup)
+@
+
+<<showsoup>>=
+summary(coffee)
+@ 
+\begin{block}{A Coffee-Rating Study}
+\begin{itemize}
+\item \R{sc}: self-confidence 
+\item \R{fl}: strength of flavour
+\item \R{drink}: whether the judge is a habitual coffee or tea drinker
+\item \R{SAT}: satisfaction ratings for the coffee
+ 
+\end{itemize}
+\end{block}  
+\end{frame}
+
+\begin{frame}[fragile]{A Simple Model First}
+  \begin{itemize}
+  \item let's assume that strength of flavour affects ratings
+  \item \ldots{} and also that self-confident people rate differently
+  \end{itemize}
+<<modx,eval=F>>=
+model <- lm(SAT~fl+sc,data=coffee)
+summary(model)
+@   
+<<modxb,echo=F>>=
+model <- lm(SAT~fl+sc,data=coffee)
+.pp(summary(model),l=list(c(10:13)))
+@ 
+\begin{itemize}
+\item it appears that flavour improves satisfaction
+\item \ldots{} but more self-confident people tend to be less satisfied
+\item<2-> what if that's not the whole story?
+\end{itemize}
+
+\end{frame}
+
+\subsection[Formulae]{Interaction is Multiplication}
+
+\begin{frame}{Interactions}
+  \begin{itemize}
+  \item self-confidence and flavour might \emph{interact}
+  \item that is, they might not be independent
+    \begin{itemize}
+    \item for example, the more self-confident a person is, the more
+      (or less) they might be affected by flavour
+    \end{itemize}
+\spc
+  \item \term{interaction terms} in linear models can be used to
+     express these relationships 
+  \item<2-> interaction terms are, simply, \term{coefficients for products}  
+  \end{itemize}
+\[
+y_i = b_0 + b_1x_1 + b_2x_2 \alert<2->{+ b_3x_1x_2} + \epsilon_i
+\]
+\end{frame}
+
+\begin{frame}[fragile]{Our Example}
+\[
+\text{SAT}_i = b_0 + b_1 \cdot \text{fl}_i + b_2 \cdot \text{sc}
++ b_3 \cdot (\text{fl} \cdot \text{sc}) + \epsilon_i
+\]
+\spc  
+<<modeln>>=
+model <- lm(SAT ~ fl + sc + fl:sc, data = coffee)
+anova(model)
+@ 
+
+\end{frame}
+
+\subsection[Interpreting]{Interpreting Interactions}
+
+\begin{frame}[fragile]{Our Example}
+\[
+\text{SAT}_i = \alert<2->{b_0} + \alert<2->{b_1} \cdot \text{fl}_i + \alert<2->{b_2} \cdot \text{sc}
++ \alert<2->{b_3} \cdot (\text{fl} \cdot \text{sc}) + \epsilon_i
+\]
+\spc  
+<<summarym,eval=F>>=
+summary(model)
+@ 
+<<summarym2,echo=F>>=
+.pp(summary(model),l=list(c(10:14)))
+@ 
+
+\begin{itemize}
+\item<3-> nutty intercept!  We might rescale in real life\ldots{}
+\item<4-> in general, ratings improve \Sexpr{round(coef(model)[2],1)}
+  units per unit increase in flavour
+\item<4-> there is no general effect of self-confidence
+\item<5-> the more self-confident a participant, the \emph{less}
+  they're influenced by flavour
+\end{itemize}
+
+\end{frame}
+
+
+
+\begin{frame}{What Does The Model Say?}
+<<doplot3,include=F,message=F>>=
+require(rsm)
+persp(model, fl~sc,main='Coffee Satisfaction',col='red')
+@ 
+\cimage[.8\linewidth]{img/auto-doplot3-1}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{Forget Self-Confidence}
+  \begin{itemize}
+  \item let's just plot the effects on flavour on satisfaction
+  \item<2-> \ldots{} and colour the points by \R{drink}
+  \end{itemize}
+
+\begin{overprint}
+\onslide<1| handout:0>
+<<pp1>>=
+# basic plot
+with(coffee,plot(SAT~fl,pch=16,cex=2))
+@   
+\cimage[.5\linewidth]{img/auto-pp1-1}
+\onslide<2| handout:1>
+<<pp2>>=
+with(coffee,plot(SAT~fl,pch=16,cex=2,col=ifelse(drink=='tea','green','brown')))
+@ 
+\cimage[.5\linewidth]{img/auto-pp2-1}
+\end{overprint}
+\end{frame}  
+
+\begin{frame}[fragile,shrink=2]{Clearly, Tea Lovers Aren't Impressed}
+\begin{columns}
+  \column{.4\linewidth}
+  \cimage[.9\linewidth]{img/bad-coffee}
+  \column{.59\linewidth}
+  \begin{itemize}
+  \item the continuous variable \R{fc} \emph{interacts with} the
+    categorical variable \R{drink}
+    \begin{itemize}
+    \item[\ra] you can't tell what influence flavour will have
+      \emph{unless} you know what the preferred drink is
+    \end{itemize}
+
+  \end{itemize}
+
+\end{columns}  
+\spc\pause
+<<lastmod>>=
+model <- lm(SAT ~ fl + drink + fl:drink,data = coffee)
+# or you could say
+# "model <- lm(SAT ~ fl*drink, data=coffee)"
+anova(model)
+@ 
+
+\end{frame}
+
+\begin{frame}[fragile]{Interpreting the Model}
+<<ll,eval=F>>=
+summary(model)
+@   
+<<ll2,echo=F>>=
+.pp(summary(model),l=list(c(10:14)))
+@ 
+\begin{itemize}
+\item if people drink \emph{coffee}, the satisfaction increase per unit flavour is \alert{\Sexpr{round(coef(model)[2],1)}}
+\item if people drink \emph{tea}, the satisfaction increase per unit
+  flavour is \Sexpr{round(coef(model)[2],1)} -
+  \Sexpr{round(abs(coef(model)[4]),1)} =  \alert{\Sexpr{round(coef(model)[2]+coef(model)[4],1)}}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{The Model}
+<<dopred,include=F>>=
+attach(coffee)
+x.cof <- seq(min(fl[drink=='coffee']),max(fl[drink=='coffee']),length.out=49)
+x.tea <- seq(min(fl[drink=='tea']),max(fl[drink=='tea']),length.out=49)
+p.cof <- data.frame(fl=x.cof,drink=factor('coffee'))
+p.tea <- data.frame(fl=x.tea,drink=factor('tea'))
+y.cof <- predict(model,p.cof,interval='confidence')
+y.tea <- predict(model,p.tea,interval='confidence')
+plot(SAT~fl,col=ifelse(drink=='tea','green','brown'))
+matlines(x.cof,y.cof,col='brown',lwd=c(3,1,1),lty=c(1,2,2))
+matlines(x.tea,y.tea,col='green',lwd=c(3,1,1),lty=c(1,2,2))
+detach(coffee)
+@   
+\cimage[.7\linewidth]{img/auto-dopred-1}
+\end{frame}
+
+
+
+\end{document}
