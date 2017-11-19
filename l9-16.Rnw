@@ -1,0 +1,729 @@
+% File: l8.Rnw
+% Time-stamp: <>
+% $Id$
+%
+% Author: Martin Corley
+
+\documentclass[aspectratio=1610,compress,11pt]{beamer}
+\usetheme{Luebeck}
+\usecolortheme{crane}
+\setbeamertemplate{navigation symbols}{}
+\usepackage{luebeck-numbers}
+\usepackage{tabto}
+
+%
+\usepackage{nbeamer}
+\usepackage{centeredimage}
+%\usepackage{mathptmx,helvet,courier}
+%\usepackage{cmbright}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+%\usepackage{colortbl}
+\usepackage{url}
+\urlstyle{same}
+\usepackage{multimedia}
+\usepackage[normalem]{ulem}
+
+%\usepackage{multimedia}
+\newcommand*{\ars}[1]{\atright{\mbox{\tiny #1}}\\}
+%\renewcommand{\term}[1]{\textbf{\textcolor{red!50!black}{#1}}}
+\renewcommand{\term}[1]{\textbf{\usebeamercolor[fg]{titlelike}{#1}}}
+\newcommand*{\spc}[1][1em]{\vspace*{#1}\par}
+\usepackage{xspace}
+\renewenvironment{knitrout}{\setlength{\topsep}{0mm}}{}
+\newcommand{\R}[1]{\colorbox{shadecolor}{\texttt{\hlstd{\small #1}}}} % R code, requires knitr defs
+\newcommand*{\Resize}[2]{\resizebox{#1}{!}{$#2$}}%
+
+<<setup, include=FALSE>>=
+require(knitr)
+# this bit makes the tildes lower
+.hook_source = knit_hooks$get('source')
+knit_hooks$set(source = function(x, options) {
+  txt = .hook_source(x, options)
+  # extend the default source hook
+  gsub('~', '\\\\textasciitilde{}', txt)
+})
+#
+knit_hooks$set(par=function(before, options, envir){
+if (before && options$fig.show!='none') par(mar=c(5.1,4.1,2.1,2.1))
+}, crop=hook_pdfcrop)
+#
+opts_chunk$set(fig.path='img/auto-',fig.align='center',fig.show='hide',size='scriptsize',warning=FALSE,tidy=TRUE,tidy.opts=list(keep.blank.line=FALSE, width.cutoff=70),fig.width=5,fig.height=4.15,par=TRUE)
+# set everything to handlable numbers of digits (reclaim screen space!)
+options(replace.assign=TRUE,width=70,digits=2)
+#options(mar=c(5.1,4.1,1.1,2.1),cex=2,cex.text=2)
+source('R/preamble.R') # useful functions
+### apparent issue with Rscript
+require(methods)
+set.seed(271271)
+@ 
+
+<<il,include=F>>=
+.inv.logit <- function(x) exp(x)/(1+exp(x))
+@ 
+
+<<makedata9,include=FALSE,results='hide'>>=
+#squal <- sample(1:100,1000,replace=T)
+#pdead <- 5-.1*squal
+#pdead <- inv.logit(pdead)
+#plot(squal[order(squal)],pdead[order(squal)],type='l')
+#adead <- rbinom(1000,1,pdead)
+#points(squal,jitter(adead))
+#singers <- data.frame(id=factor(sprintf("A%04d",1:1000)),qual=squal,dead=adead)
+#save(singers,file='l9.Rdata')
+@ 
+
+\title[USMR~9]{The General\underline{ized} Linear Model}
+\subtitle{Binomial Data}
+\author{Martin Corley}
+\date{}
+
+\begin{document}
+
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+%% { \definecolor{mycolor}{HTML}{FEF5DA}
+%%   \setbeamercolor{background canvas}{bg=mycolor}
+%%   \begin{frame}<handout:0>{ANNOUNCEMENTS}
+%%     \begin{block}{Lectures}
+%%       \begin{itemize}
+%%       \item today\tabto{5cm}GLM
+%%       \item Wednesday 30th\tabto{5cm}exam hints etc.
+%%       \end{itemize}
+%%     \end{block}
+%%     \spc\pause
+%%     \begin{block}{Labs}
+%%       \begin{itemize}
+%%         \item this week\tabto{5cm}new material
+%%         \item \alert{Friday 2nd}\tabto{5cm}revision
+%%       \end{itemize}
+   
+ 
+%%   \end{block}
+%% \end{frame}
+
+%%   \begin{frame}<handout:0>{ANNOUNCEMENTS}
+%%     \begin{alertblock}{Exam}
+%%       \begin{itemize}
+%%       \item available this week
+%%       \item a `short report' on the analysis of some data
+%%       \item this week's lab is similar in spirit  
+%%       \end{itemize}
+%%     \end{alertblock}
+
+%%   \end{frame}
+%% }
+
+\begin{frame}
+\frametitle{Today}
+\tableofcontents[part=1]
+\tableofcontents[part=2]
+\tableofcontents[part=3]
+\end{frame}
+
+
+\part{Events and Probabilities}
+
+\section[Events]{Events and Probabilities}
+
+\subsection[Events]{Binary Outcomes}
+
+
+\begin{frame}{But First, Some Music}
+  
+\begin{center}
+\movie{\cimage[.9\linewidth]{img/alien}}{video/alien.mp4}
+\end{center}
+
+\end{frame}
+
+\begin{frame}{Some Outcomes are Either/Or\ldots}
+<<func,include=F>>=
+
+imf <- function(row) {
+    load(url("https://is.gd/l9data"))
+    fn <- ifelse(singers$splatted[row] == 1, 'splat' , 'sing')
+    o <- paste('\\only<1| handout:0>{\\cimage[.8\\linewidth]{img/',fn,'}}\\only<2->{\\cimage[.8\\linewidth]{img/',fn,'1}}',sep='')
+    o
+    }
+   
+@ 
+  
+\begin{columns}
+\column{.25\linewidth}
+\Sexpr{imf(1)}\\[1em]
+\Sexpr{imf(4)}\\
+\column{.25\linewidth}
+\Sexpr{imf(2)}\\[1em]
+\Sexpr{imf(5)}\\
+\column{.25\linewidth}
+\Sexpr{imf(3)}\\[1em]
+\Sexpr{imf(6)}\\
+\end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]{1,000 Aliens}
+<<getdata>>=
+load(url("https://is.gd/l9data"))
+ls()
+head(singers)
+@ 
+\spc
+\begin{itemize}
+\item \R{id} for 1,000 aliens
+\item \R{quality} = quality of singing
+\item \R{splatted} = whether splatted
+\end{itemize}
+
+\end{frame}  
+ 
+\begin{frame}[fragile]{Examining the Data}
+\begin{overprint}
+  \onslide<1| handout:0>
+<<aplot1>>=
+with(singers,plot(splatted~quality,axes=F))
+axis(2,at=c(0,1),labels=c('survived','splatted'))
+axis(1)
+@   
+
+\cimage[.5\linewidth]{img/auto-aplot1-1}
+\onslide<2| handout:1>
+<<aplot2>>=
+with(singers,plot(jitter(splatted)~quality,axes=F))
+axis(2,at=c(0,1),labels=c('survived','splatted'))
+axis(1)
+@ 
+\cimage[.5\linewidth]{img/auto-aplot2-1}
+\begin{itemize}
+\item \R{jitter()} useful for looking at overlapping data
+\end{itemize}
+\end{overprint}
+\end{frame}
+
+\subsection[Probability]{Outcomes and Probabilities}
+
+\begin{frame}
+  \frametitle{Binomial Regression, Conceptually}
+  \begin{itemize}
+  \item each alien either gets splatted or doesn't
+    \begin{itemize}
+    \item each observation is either a 1 or a 0
+    \end{itemize}
+  \item underlyingly, there's a \term{binomial} distribution
+  \item for each value of quality of singing there's a
+    \term{probability} of getting splatted
+    \spc\pause
+  \item for each alien, the outcome is deterministic
+    \item but it's the \emph{probability} that we're ultimately interested in
+\item<3-> we can approximate this by binning our data\ldots{}
+    
+    \end{itemize}
+  
+  
+\end{frame}
+
+\begin{frame}[fragile]{Binning Data}
+<<binme>>=
+x <- cut(singers$quality, seq(0,100,by=10))
+m <- aggregate(singers$splatted,list(x),mean)
+plot(m,xlab='Bin',ylab='Proportion Splatted')
+@ 
+\cimage[.6\linewidth]{img/auto-binme-1}
+
+\end{frame}  
+
+\begin{frame}[fragile]{Best Fit Lines}
+  \begin{itemize}
+  \item using standard regression, we can fit our binned data\ldots{}
+  \item<2-> \ldots{}or even our raw ones and zeros
+  \end{itemize}
+  \spc
+<<twog,include=F>>=
+<<binme>>
+abline(lm(m[,2]~as.numeric(m[,1])),col='red',lwd=3)
+<<aplot1>>
+abline(lm(splatted~quality,data=singers),col='red',lwd=3)
+@ 
+\begin{columns}
+\column{.49\linewidth}
+\cimage[.9\linewidth]{img/auto-twog-1}
+\column{.49\linewidth}
+\visible<2->{\cimage[.9\linewidth]{img/auto-twog-2}}
+\end{columns}
+\spc
+\begin{itemize}
+  
+\item<3-> \ldots{}but there's something very wrong\ldots
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Problem with Probability}
+
+<<showme,include=F>>=
+with(singers,plot(NULL,axes=F,ylab='p(splatted)',cex.lab=1.7,ylim=c(-.2,1.2),xlim=c(0,100),xlab='quality'))
+rect(c(0,0),c(0,1),c(100,100),c(-.2,1.2),col='pink',border=NA)
+x <- 1:100
+y <- .inv.logit(5-.1*x)
+lines(x,y,col='gray',lty=2,lwd=2)
+par(new=T)
+with(singers,plot(splatted~quality,axes=F,xlab='',ylab='',ylim=c(-.2,1.2)))
+axis(1)
+axis(2,at=c(0,1))
+abline(lm(splatted~quality,data=singers),col='red',lwd=3)
+ 
+@ 
+\cimage[.55\linewidth]{img/auto-showme-1}
+\begin{itemize}
+\item a \term{linear} model predicts impossible values, because\ldots
+\item probability isn't (and can't be) linear
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{Probability}
+<<varme,include=F>>=
+<<binme>>
+v <- aggregate(singers$splatted,list(x),var)
+points(singers$quality/10,singers$splatted)
+lines(v,col='red',lwd=2)
+text(7.5,0.25,'variance',cex=1.3,col='red')
+@ 
+\cimage[.55\linewidth]{img/auto-varme-1}  
+\begin{itemize}
+\item variance necessarily covaries with probability
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{Checking Assumptions}
+<<check9,include=FALSE>>=
+model <- lm(splatted~quality,data=singers)
+par(mfrow=c(2,2))
+plot(model,which=c(1:4))
+@   
+<<check9a,eval=FALSE>>=
+model <- lm(splatted~quality,data=singers)
+plot(model,which=c(1:4))
+@ 
+
+\cimage[.6\linewidth]{img/auto-check9-1}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Probability}
+<<pg,include=F>>=
+x <- -50:150
+y <- .inv.logit(5-.1*x)
+plot(x,y,axes=F,type='n',cex.lab=1.2,xlab='quality',ylab='p(splatted)')
+axis(1,at=seq(0,100,by=25))
+axis(2,at=c(0,1))
+lines(x[x>=0 & x<=100],y[x>=0 & x<= 100],lwd=4)
+lines(x[x<0],y[x<0],lwd=4,col=2)
+lines(x[x>100],y[x>100],lwd=4,col=2)
+@ 
+\cimage[.5\linewidth]{img/auto-pg-1}
+\begin{itemize}
+\item even if we could measure quality outwith the range 0--100,
+  p(splatted) could never exceed the range 0--1
+\item in fact, never reaches 0 or 1
+  \begin{itemize}
+  \item[\ra] \term{asymptotic}
+  \end{itemize}
+
+\end{itemize}
+  
+
+  
+\end{frame}
+
+
+\subsection[Odds]{Odds and Log-Odds}
+
+\begin{frame}
+  \frametitle{Probability and Odds}
+  \begin{itemize}
+  \item \term{odds} express probability in a less bounded way
+  \end{itemize}
+\[
+\text{odds}(x) = \frac{p(x)}{1-p(x)}
+\]
+  
+\begin{example}
+\begin{center}
+\begin{tabular}{lcc}
+ & \term{$p(x)$} & \term{$\text{odds}(x)$} \\[.5em]
+throw heads & $\frac{1}{2}$ & $\frac{1}{1}$ \\[.5em]
+win prize & $\frac{1}{1000}$ & $\frac{1}{999}$ \\[.5em]
+throw 8 & $\frac{5}{36}$ & $\frac{5}{29}$ \\[.5em]
+\alert<2->{get splatted} & \alert<2->{$\frac{99}{100}$} & \alert<2->{$\frac{99}{1}$} \\[.5em]
+\end{tabular}
+\end{center}
+\end{example}
+\begin{itemize}
+\item<2-> odds range from 0--$\infty$ (which half-solves our problem!)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Probability and Log-Odds}
+  \begin{itemize}
+  \item complete solution lies in taking log-odds
+  \item $\log(0) = -\infty$; $\log(\infty) = +\infty$
+  \item<3-> $\log(1) = 0$ where odds of 1 are exactly 50:50
+  \end{itemize}
+  \spc
+<<ggg,include=F,fig.width=9,fig.height=3>>=
+par(mfrow=c(1,3))
+x <- 1:100
+y <- .inv.logit(5-.1*x)
+plot(y~x,xlab='quality',ylab='p(splatted)',cex.lab=1.4,type='l',lwd=2,col='red',main='probability',cex.main=1.9)
+plot((y/(1-y))~x,xlab='quality',ylab='odds of splat',cex.lab=1.4,type='l',col='red',lwd=2,main='odds',cex.main=1.9)
+plot(log((y/(1-y)))~x,xlab='quality',ylab='log-odds of splat',cex.lab=1.4,type='l',col='red',lwd=2,main='log-odds',cex.main=1.9)
+@   
+<<ggg2,include=F,fig.width=9,fig.height=3>>=
+par(mfrow=c(1,3))
+x <- 1:100
+y <- .inv.logit(5-.1*x)
+plot(y~x,xlab='quality',ylab='p(splatted)',cex.lab=1.4,type='l',lwd=2,col='red',main='probability',cex.main=1.9)
+abline(v=50,col='blue',lty=3)
+text(64,.8,'x=50, p=.5',col='blue',cex=1.6)
+plot((y/(1-y))~x,xlab='quality',ylab='odds of splat',cex.lab=1.4,type='l',col='red',lwd=2,main='odds',cex.main=1.9)
+abline(v=50,col='blue',lty=3)
+text(68,40,'x=50, odds=1',col='blue',cex=1.6)
+plot(log((y/(1-y)))~x,xlab='quality',ylab='log-odds of splat',cex.lab=1.4,type='l',col='red',lwd=2,main='log-odds',cex.main=1.9)
+abline(v=50,col='blue',lty=3)
+text(64,3,'x=50, log-odds=0',col='blue',cex=1.6)
+@ 
+\begin{overprint}
+\onslide<1| handout:0>
+~
+\onslide<2| handout:0>
+\cimage{img/auto-ggg-1}
+\onslide<3| handout:1>
+\cimage{img/auto-ggg2-1}
+\end{overprint}
+\end{frame}
+
+
+\section[GLM]{The Generalized Linear Model}
+\subsection{Example}
+\begin{frame}<1>[label=ABD]
+  \frametitle{Analysing Binomial Data}
+  \begin{block}{The Generalized Linear Model}
+    \begin{itemize}
+  \item fit using \term{maximum likelihood}
+  \item<2-> fit analysed in terms of \term{deviance} instead of $F$
+  \item<2-> coefficients evaluated using \term{Wald's $z$} instead of $t$
+  \item<3->[\ra] coefficients are in \term{logit} units (logits=log-odds)
+    \end{itemize}
+  \end{block}
+  
+\spc
+\begin{itemize}
+\item<3-> but actually, it's all quite straightforward\ldots{}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{About Likelihood}
+\begin{block}{Likelihood}
+  \begin{itemize}
+  \item \emph{extent to which a sample
+      provides support for a model}
+  \end{itemize}
+\end{block}
+
+   
+<<testme,include=F>>=
+do.l <- function(heads,total=10) {
+    x <- seq(0,1,length.out=49)
+    y <- dbinom(heads,total,x)
+    plot(x,y,xlab='model: p(H)',ylab='likelihood',axes=F,type='l',lwd=2,col='red',cex.lab=1.2,main=paste(heads,' H out of ',total,' tosses',sep=''),ylim=c(0,.4),cex.main=1.4)
+    axis(1)
+    axis(2,at=c(0,.4),labels=c('',''))
+}
+par(mfrow=c(2,2))
+do.l(3)
+do.l(5)
+do.l(7)
+do.l(9)
+@ 
+\begin{columns}
+  \column{.2\linewidth}
+\cimage[.8\linewidth]{img/50p.jpg}
+\column{.79\linewidth}
+\cimage[.7\linewidth]{img/auto-testme-1}
+\end{columns}
+
+\end{frame}
+
+
+\againframe<1-3>{ABD}
+
+
+\begin{frame}[fragile]
+  \frametitle{Alien Singer Splat Probability}
+<<aliens>>=
+head(singers)
+model <- glm(splatted~quality,data=singers,family=binomial)
+@ 
+\begin{alertblock}{Three Differences from Standard Linear
+    Models}
+\begin{itemize}
+\item use \R{glm()} instead of \R{lm()}
+\item specify \term{link function} with \R{family = binomial}
+\item can take a 2-level factor DV
+\end{itemize}
+\end{alertblock}
+
+\end{frame}
+
+\subsection[Fit]{Model Fit}
+
+\begin{frame}[fragile]{Evaluating the Model}
+<<aglm>>=
+anova(model)
+@   
+
+\begin{itemize}
+\item NB., no test done by default
+\item \term{deviance} compares the likelihood of the new model to the
+  previous model
+  \begin{itemize}
+  \item a generalisation of residual sum of squares
+  \end{itemize}
+\item \term{high} deviance and \term{low} residual deviance is good
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Evaluating the Model}
+<<echo=F>>=
+.pp(anova(model),l=list(0,c(10:12)))
+@   
+ 
+
+\begin{block}{Deviance and Likelihood}
+  \begin{itemize}
+  \item deviance is $-2\times$ the \term{log-likelihood ratio} of the reduced
+    compared to the full model
+  \end{itemize}
+<<showmeplease>>=
+logLik(model) # closer to zero is good
+m.null <- glm(splatted~1,data=singers,family=binomial)
+logLik(m.null)
+(logLik(m.null) - logLik(model)) * -2
+@ 
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile,shrink=5]{Evaluating the Model}
+  \begin{itemize}
+  \item model deviance maps to the $\chi^2$ distribution
+  \item can use this to evaluate whether
+    each model improves over the previous one
+  \end{itemize}
+  
+<<hoopla>>=
+anova(model,test='Chisq')
+@ 
+
+\begin{itemize}
+\item knowing about the quality of singing improves our
+  ability to estimate the probability of getting splatted
+\end{itemize}
+
+\end{frame}
+
+\subsection[Coefficients]{Model Coefficients}
+
+\begin{frame}[fragile,shrink=5]
+  \frametitle{Model Coefficients}
+<<sumglm>>=
+summary(model)
+@ 
+  
+\end{frame}
+
+\begin{frame}[fragile]{What the Coefficients Mean}
+\framesubtitle{Coefficients are in \term{logits} (= log-odds)}
+<<sumglm2,echo=F>>=
+.pp(summary(model),l=list(c(10:12)))
+@ 
+<<easy,include=F>>=
+.o20 <- coef(model)[1]+30*coef(model)[2]
+.o10 <- exp(.o20)
+@ 
+
+\begin{itemize}
+\item<1-> odds of being splatted for quality 0 $= e^{\Sexpr{coef(model)[1]}}
+  = \Sexpr{exp(coef(model)[1])}:1$
+\item<2-> for each additional unit of quality, odds are multiplied by
+  $e^{\Sexpr{coef(model)[2]}} = \Sexpr{exp(coef(model)[2])}$
+\item<3-> odds for quality 30 $= \Sexpr{exp(coef(model)[1])} \times
+  \Sexpr{exp(coef(model)[2])}^{30} = \Sexpr{exp(coef(model)[1])*(exp(coef(model)[2])^30)}:1$
+\spc
+\item<4-| alert@4> equivalent: $e^{(\Sexpr{coef(model)[1]}\; +\; 30 \times
+    \Sexpr{coef(model)[2]})} = e^{\Sexpr{.o20}} = \Sexpr{.o10}:1$ 
+\end{itemize}
+\pause[4]
+<<exp,eval=F>>=
+exp(coef(model)[1] + 30*coef(model)[2])
+@ 
+<<exp2,echo=F>>=
+as.numeric(exp(coef(model)[1] + 30*coef(model)[2]))
+@ 
+\end{frame}
+
+
+\begin{frame}[fragile]{Odds and Probability}
+\begin{block}{Odds}
+\[
+\text{odds} = e^{\text{(relevant linear formula in logits)}}
+\]
+\end{block}
+\spc
+\begin{columns}
+\column{.49\linewidth}
+\uncover<2->{\[
+\text{odds}(x) = \frac{p(x)}{1-p(x)}
+\]}
+\column{.49\linewidth}
+\uncover<3->{\[
+p(x) = \frac{\text{odds}(x)}{1+\text{odds}(x)}
+\]}
+\end{columns}
+\spc
+\pause[4]
+\begin{itemize}
+\item \emph{probability} of getting splatted for quality 30 $=
+  \frac{\Sexpr{.o10}}{1+\Sexpr{.o10}} = \Sexpr{.o10/(.o10+1)}$
+\end{itemize}
+
+
+\pause[5]
+<<handy>>=
+# handy function!
+logit.to.p <- function(logits) {exp(logits) / (exp(logits) + 1)}
+logit.to.p(1.91)
+@ 
+
+\end{frame}  
+
+\begin{frame}[fragile]
+  \frametitle{What The Coefficients Mean}
+<<could>>=
+x <- seq(min(singers$quality),max(singers$quality),length.out=49)
+y <- logit.to.p(5.082 - 0.106 * x)
+plot(y~x,xlab='quality',ylab='p(splatted)',type='l',col='red',lwd=2)
+@ 
+\cimage[.55\linewidth]{img/auto-could-1}  
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{(Easy Plotting)}
+<<could2>>=
+y <- fitted(model)
+plot(y[order(singers$quality)]~singers$quality[order(singers$quality)],xlab='quality',ylab='p(splatted)',type='l',col='red',lwd=2)
+points(singers$splatted~singers$quality)
+@   
+\cimage[.5\linewidth]{img/auto-could2-1}    
+\end{frame}
+
+%%%%%%% "accuracy?"
+
+\subsection[Accuracy]{Can We Measure `Explained Variance'?}
+
+\begin{frame}{One Last Thing}
+\begin{block}{So Far, We've Looked At}
+  \begin{itemize}
+  \item model \term{deviance} ($\approx$ fit)
+  \item model \term{coefficients}
+  \end{itemize}
+\end{block}
+\begin{itemize}
+\item what about `explained variance' ($\approx R^2$)?
+\pause
+\item no really good way of doing this, many proposals
+  
+\item SPSS uses something called `accuracy' (roughly, how well does
+  the model predict actual data?)
+\item not very informative, but good for learning \R{R}
+\end{itemize}
+
+
+
+\end{frame}
+
+
+\begin{frame}[fragile]{Accuracy}
+<<accuracy>>=
+guess <- fitted(model)
+### if p > .5 predict 1, else 0
+guess <- ifelse(guess > .5,1,0)
+### make use of the fact that "sum" treats TRUE as 1
+hits <- sum(guess == singers$splatted)
+### accuracy is hits/total
+hits/length(singers$splatted)
+@ 
+  
+\begin{itemize}
+\item current model `correctly predicts' \Sexpr{100*hits/length(singers$splatted)}\% of the observations
+\item[\ra] if you're an alien, it's worth keeping up with those singing lessons!
+\end{itemize}
+
+\end{frame}
+
+\subsection[Others]{Other Types of Data}
+
+\begin{frame}{Other Types of Data}
+  \begin{itemize}
+  \item logit regression is \emph{one type} of GLM
+  \item others make use of different \term{link functions} (through
+    \R{family = \ldots})
+
+  \spc\pause
+  
+ 
+\item \term{poisson}: number of events in a time period
+\item \term{inverse gaussian}: time to reach some criterion
+\item \ldots{}
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}{GLMs}
+\transdissolve
+
+\begin{block}{Predictor Variables \atright{(don't affect the choice of model)}}
+  \begin{itemize}
+  \item linear
+  \item convertible to linear \atright{(use \R{log()} etc.})
+    
+  \item non-convertible \atright{(use \R{contrasts()} etc.)}
+  \end{itemize}
+\end{block}
+\spc
+\pause
+\begin{block}{DVs \atright{(affect the choice of model)}}
+  \begin{itemize}
+  \item linear
+  \item convertible to linear \atright{(use \R{log()} etc.})
+    
+  \item<alert@2> non-convertible \atright{(use \R{glm()} with \R{family = \ldots})}
+  \end{itemize}
+\end{block}
+
+\end{frame}
+
+
+\end{document}
