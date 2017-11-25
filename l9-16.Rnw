@@ -362,7 +362,7 @@ lines(x[x>100],y[x>100],lwd=4,col=2)
  & \term{$p(x)$} & \term{$\text{odds}(x)$} \\[.5em]
 throw heads & $\frac{1}{2}$ & $\frac{1}{1}$ \\[.5em]
 win prize & $\frac{1}{1000}$ & $\frac{1}{999}$ \\[.5em]
-throw 8 & $\frac{5}{36}$ & $\frac{5}{29}$ \\[.5em]
+throw 8 & $\frac{5}{36}$ & $\frac{5}{31}$ \\[.5em]
 \alert<2->{get splatted} & \alert<2->{$\frac{99}{100}$} & \alert<2->{$\frac{99}{1}$} \\[.5em]
 \end{tabular}
 \end{center}

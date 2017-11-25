@@ -1,0 +1,796 @@
+% File: l8.Rnw
+% Time-stamp: <>
+% $Id$
+%
+% Author: Martin Corley
+
+\documentclass[compress,11pt,aspectratio=1610]{beamer}
+\usetheme{Luebeck}
+\usecolortheme{crane}
+\setbeamertemplate{navigation symbols}{}
+\usepackage{luebeck-numbers}
+\usepackage{tabto}
+
+%
+\usepackage{nbeamer}
+\usepackage{centeredimage}
+%\usepackage{mathptmx,helvet,courier}
+%\usepackage{cmbright}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+%\usepackage{colortbl}
+\usepackage{url}
+\urlstyle{same}
+\usepackage[normalem]{ulem}
+
+%\usepackage{multimedia}
+\newcommand*{\ars}[1]{\atright{\mbox{\tiny #1}}\\}
+%\renewcommand{\term}[1]{\textbf{\textcolor{red!50!black}{#1}}}
+\renewcommand{\term}[1]{\textbf{\usebeamercolor[fg]{titlelike}{#1}}}
+\newcommand*{\spc}[1][1em]{\vspace*{#1}\par}
+\usepackage{xspace}
+\renewenvironment{knitrout}{\setlength{\topsep}{0mm}}{}
+\newcommand{\R}[1]{\colorbox{shadecolor}{\texttt{\hlstd{\small #1}}}} % R code, requires knitr defs
+\newcommand*{\Resize}[2]{\resizebox{#1}{!}{$#2$}}%
+
+<<setup, include=FALSE>>=
+require(knitr)
+# this bit makes the tildes lower
+.hook_source = knit_hooks$get('source')
+knit_hooks$set(source = function(x, options) {
+  txt = .hook_source(x, options)
+  # extend the default source hook
+  gsub('~', '\\\\textasciitilde{}', txt)
+})
+#
+knit_hooks$set(par=function(before, options, envir){
+if (before && options$fig.show!='none') par(mar=c(5.1,4.1,2.1,2.1))
+}, crop=hook_pdfcrop)
+#
+opts_chunk$set(fig.path='img/auto-',fig.align='center',fig.show='hide',size='scriptsize',warning=FALSE,tidy=TRUE,tidy.opts=list(keep.blank.line=FALSE, width.cutoff=70),fig.width=5,fig.height=4.15,par=TRUE)
+# set everything to handlable numbers of digits (reclaim screen space!)
+options(replace.assign=TRUE,width=70,digits=2)
+#options(mar=c(5.1,4.1,1.1,2.1),cex=2,cex.text=2)
+source('R/preamble.R') # useful functions
+### apparent issue with Rscript
+require(methods)
+set.seed(271271)
+@ 
+
+
+\title[USMR~10]{Ae fareweel, alas\footnote{\url{https://en.wikipedia.org/wiki/Ae_Fond_Kiss}}}
+\subtitle{ANOVA, Analysis, Reporting}
+\author{Martin Corley}
+\date{}
+
+\begin{document}
+
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+\begin{frame}
+\frametitle{Today}
+\tableofcontents[part=1]
+\tableofcontents[part=2]
+\tableofcontents[part=3]
+\end{frame}
+
+\part{ANOVA and GLM}
+\section{ANOVA and GLM}
+\subsection{Concepts}
+\begin{frame}[plain]
+  \partpage
+\end{frame}
+
+\begin{frame}
+  \frametitle{ANOVA and GLM}
+\begin{AQuote}{Cohen (1968)}
+  If you should say to a mathematical statistician that you have
+  discovered that linear multiple regression analysis and the analysis
+  of variance (and covariance) are identical systems, he would mutter
+  something like, ``Of course---general linear model,'' and you might
+  have trouble maintaining his attention. If you should say this to a
+  typical psychologist, you would be met with incredulity, or
+  worse. Yet it is true, and in its truth lie possibilities for more
+  relevant and therefore more powerful exploitation of research data.
+\end{AQuote}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{History: ANOVA and Multiple Regression}
+  \begin{block}{Multiple Regression}
+\begin{itemize}    
+  \item Introduced c.\@ 1900 in biological and behavioural sciences
+  \item aligned to ``natural variation''
+ \end{itemize}
+  \end{block}
+  \spc
+  \begin{block}{ANOVA}
+  \begin{itemize}
+  \item Introduced c.\@ 1920 in agricultural research
+  \item aligned to experimentation and manipulation
+  \item much simpler to calculate (can easily be done by hand)  
+  \end{itemize}
+\end{block}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{History: ANOVA and Multiple Regression}
+  \begin{itemize}
+  \item ANOVA tells us that groups $(g_1, g_2, \ldots, g_n)$ have
+    different means ($\bar{x}$)
+  \item MR tells us that means ($\bar{y}$) are related to groups $(g_1, g_2, \ldots, g_n)$
+\item both produce $F$-ratios, discussed using different language, but identical  \end{itemize}
+\spc\pause
+\begin{block}{Why teach ANOVA separately?}
+  \begin{itemize}
+  \item you can make students do ANOVA by hand
+  \item it can be useful to explain experimental design
+  \end{itemize}
+\end{block}
+
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Why prefer GLM/Regression?}
+  \begin{itemize}
+  \item GLM has less restrictive assumptions
+    \begin{itemize}
+    \item especially true for unbalanced designs/missing data
+    \end{itemize}
+\spc  \item GLM is far better at dealing with covariates
+    \begin{itemize}
+    \item  can arbitrarily mix continuous and discrete predictors
+    \end{itemize}
+    \pause
+\spc \item<alert@2> GLM is the gateway to other powerful tools
+  \begin{itemize}
+  \item mixed models and factor analysis\atright{\ra{} MSMR}
+  \item structural equation models
+  \end{itemize}
+  \end{itemize}
+  
+  
+\end{frame}
+
+\subsection{Examples}
+
+\begin{frame}[fragile]
+  \frametitle{ANOVA in R}
+\framesubtitle{Which Apples are Tastiest?}
+<<maked>>=
+apples <- data.frame(
+    colour = gl(2,2,8,labels=c('green','red')),
+    taste = runif(8,1,7)
+    )
+apples
+@ 
+\pause
+\begin{itemize}
+\item linear model, and ANOVA
+\end{itemize}
+<<doit>>=
+r.mod <- lm(taste ~ colour, data = apples)
+
+## alternative ANOVA command
+
+a.mod <- aov(taste ~ colour, data = apples)
+@ 
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{lm() vs.\@ aov()}
+  \begin{itemize}
+  \item linear model:
+  \end{itemize}
+<<showme.l>>=
+anova(r.mod)
+@ 
+
+\begin{itemize}
+\item ANOVA:
+\end{itemize}
+<<showme.a>>=
+summary(a.mod)
+@ 
+\begin{itemize}
+\item NB: can't inspect coefficients!
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{lm() vs.\@ aov()}  
+\begin{itemize}
+\item linear model:
+\end{itemize}
+<<showme.l2f,eval=FALSE>>=
+summary(r.mod)
+@ 
+<<showme.l2,echo=FALSE>>=
+.pp(summary(r.mod),l=list(0,c(10:12),0))
+@ 
+\begin{itemize}
+\item ANOVA:
+\end{itemize}
+<<showme.a2>>=
+model.tables(a.mod)
+@ 
+\end{frame}
+
+{\usebackgroundtemplate{\includegraphics[width=\paperwidth]{img/elephant}}
+\begin{frame}[t,plain]
+  \transdissolve
+\vspace*{8.2cm}
+\begin{center}
+{\huge \textbf{\textcolor{white}{The Elephant In The Room}}}
+\end{center}
+
+\end{frame}}
+
+\begin{frame}{The Elephant is Repeated Measures}
+  \begin{itemize}
+  \item so far, \emph{every} model we've looked at has been `one
+    observation per participant' (or `one observation per word')
+  \item however, most experiments have a \emph{structure}
+\spc
+    \item some observations are `more related' to each other than others
+    \item for example, because they come from the same person
+      (repeated measures)
+ \end{itemize}
+\end{frame}  
+
+\begin{frame}
+  \frametitle{Mixed Models (looking ahead)}
+  
+  \begin{block}{The Regression Equation}
+  \[ y_{i\visible<2->{\alert<2>{j}}} = b_{0\visible<2->{\alert<2>{j}}} +
+   b_{1\visible<2->{\alert<2>{j}}}x_{1i\visible<2->{\alert<2>{j}}} +
+   \epsilon_{i\visible<2->{\alert<2>{j}}}
+   \]
+
+   \pause[3]\spc[.5em]
+   \[ b_{0j} = \gamma_{00} + \upsilon_{0j} \]
+   \[ b_{1j} = \gamma_{01} + \upsilon_{1j} \]
+    
+  \end{block}
+  \pause[4]
+  \begin{itemize}
+  \item relatedness accounted for by more regression equations
+    
+  \item all part of the linear model \atright{\alert{\ra{} NEXT TERM}}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{ANOVA reading}
+  \begin{itemize}
+  \item brief introduction: Navarro (pp.\@ 523--534, v0.5)
+  
+  \item Cohen, J.\@ (1968). Multiple Regression as a General
+    Data-Analytic System.  \textit{Psychological Bulletin, 70,}
+    426--443.
+  \item Chapter 16 of Howell, D.~C.\@ (2002). \textit{Statistical Methods for
+      Psychology,} 5th Edn. Duxbury, CA: Duxbury Thomson Learning.
+    
+
+  \end{itemize}
+\end{frame}
+
+\part{Analysis}
+\section{Analysis}
+\subsection[Logic]{The Logic of Analysis}
+\begin{frame}[plain]
+  \partpage
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{Analytical Steps}
+
+\begin{itemize}
+\item steps typically needed for an analysis \textcolor{gray}{(cough: lab~9, exam)}
+\end{itemize}
+\spc
+\begin{enumerate}
+\item specify research questions and hypotheses
+\item operationalize variables
+\item clean and prepare data
+\item describe and visualise data
+\item select and run statistics
+\item check test and data assumptions
+\item interpret results
+\end{enumerate}
+
+\end{frame}
+
+\subsection[Data]{Questions and Data}
+\begin{frame}
+  \frametitle{Research Questions and Hypotheses}
+  \begin{Quote}
+  produce some graphics and statistics to indicate what the
+  relationship is between where people live, their politics, and their
+  attitudes towards fox-hunting  
+  \end{Quote}
+  \spc
+  \begin{itemize}
+  \item relational statement (relationship)
+    \begin{itemize}
+    \item can be extended to think about prediction (correlation \ra{}
+      regression)
+    \end{itemize}
+  \item variables
+    \begin{itemize}
+    \item where people live, politics, attitudes to fox-hunting
+    \item[\ra] need to be \term{operationalized}
+    \end{itemize}
+
+  \end{itemize}
+  
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Operationalizing Variables}
+  \begin{Quote}
+    politics, using the Stone-Corley Wingedness Inventory, which
+    returns a score along the political spectrum ranging from -100
+    (extremely left-wing, socialist) to 100 (extremely right-wing, conservative)
+  \end{Quote}
+  \begin{itemize}
+  \item continuous, self-rated
+  \end{itemize}
+\spc
+\pause
+\begin{Quote}
+  where participants lived (urban, suburban, country)
+\end{Quote}
+\begin{itemize}
+\item nominal category with 3~levels
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Cleaning Data}
+  \begin{enumerate}
+  \item are there any impossible values?
+    \begin{itemize}
+    \item recode them as something sensible; usually \R{NA}
+    \end{itemize}
+\spc
+\pause
+\item are there any outliers?
+  \begin{itemize}
+  \item what test/critical values will be use?
+  \item are outliers exerting influence?
+  \end{itemize}
+\spc
+\pause
+\item are categorical variables appropriately encoded?
+  \begin{itemize}
+  \item does \R{R} recognise them as \R{factor}s?
+  \item are the levels labelled? Remember how \R{R} deals with labels\ldots
+  \end{itemize}
+  \end{enumerate}
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Describing and Visualising Data}
+  \begin{itemize}
+  \item descriptions depend on variable types
+   \spc
+   
+ \item \R{politics}: continuous \ra{} mean, SD, (skew, kurtosis),
+   histogram or density?
+    \spc
+    
+  \item \R{home}: nominal category \ra{} frequencies, mosaic plot?
+  \end{itemize}
+\end{frame}
+
+\subsection[Stats]{Statistics}
+
+\begin{frame}
+  \frametitle{Statistics!}
+  \begin{itemize}
+  \item \term{$t$-test:} mean difference 
+  \item \term{correlation:} association
+
+  \item \term{regression:} `prediction' 
+  \end{itemize}
+\spc
+\pause
+\begin{itemize}
+\item choice depends on relational statement in question
+\item calculation depends on DV~type etc.
+\spc
+\item how does this method treat missing data? (\R{na.rm=T}?)
+\item what is the key output (from \R{summary()}, for example?)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Checking Assumptions}
+\begin{block}{For Linear Models: Required}
+  \begin{itemize}
+  \item \term{linearity} of relationships(!)
+  \item for the \emph{residuals}:
+    \begin{itemize}
+    \item \term{normality}
+    \item \term{homogeneity of variance}
+    \item \term{independence}
+    \end{itemize}
+  \end{itemize}
+\end{block}  
+\spc[.5em]
+\pause[2]
+\begin{block}{For Linear Models: Desirable}
+  \begin{itemize}
+  \item uncorrelated predictors (no collinearity)
+  \item no `bad' (overly influential) observations
+  \end{itemize}
+\end{block}
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Logit Regression Assumptions}
+  
+\begin{block}{For Binomial DVs, Assumptions are Different}
+\begin{itemize}
+\item \term{linearity} of relationships between IVs and log-odds
+\item for the \emph{residuals}:
+    \begin{itemize}
+    \item \sout{normality}
+    \item \sout{homogeneity of variance}
+    \item \term{independence}
+    \end{itemize}
+  \end{itemize}
+\end{block}
+\spc[.5em]
+\pause[2]
+\begin{block}{Desirable}
+  \begin{itemize}
+  \item uncorrelated predictors (no collinearity)
+  \item no `bad' (overly influential) observations
+  \item large samples (due to maximum likelihood fitting)
+  \end{itemize}
+\end{block}
+
+\end{frame}
+
+{ \definecolor{mycolor}{HTML}{FEF5DA}
+  \setbeamercolor{background canvas}{bg=mycolor}
+  \begin{frame}{EXAM INFO}
+    \begin{itemize}
+    \item for the exam, we do not expect a full suite of assumption
+      checks for any \R{glm(\ldots{} family=binomial)} regressions you
+      do
+      \spc
+    \item please provide a rationale for using these regressions based
+      on the types of variables you are analysing
+    \end{itemize}
+
+  
+\end{frame}}
+
+\subsection{Interpretation}
+
+\begin{frame}[fragile]
+  \frametitle{Interpretation:  Linear Models}
+  <<intslop,echo=F>>=
+curve(5+2*x,from=-1,to=4,ylim=c(0,14),frame.plot=F,ylab='y=5+2x')
+arrows(0,0,0,5,lwd=3,col='red',code=3,length=0.15)
+text(0.1,2,pos=4,"intercept",col='red')
+lines(x=c(1,2.5),y=c(7,7),lty='dashed',lwd=2,col='blue')
+arrows(2,7,2,9,lwd=3,col='blue',code=3,length=0.15)
+text(2.1,8,pos=4,"slope",col='blue')
+@   
+\cimage[.45\linewidth]{img/auto-intslop-1}
+\pause
+\begin{block}{Linear Model}
+\centering{$\hat{y_i}={b_0}\visible<1-2>{\cdot\textcolor<2>{red}{1}} + b_1\cdot\textcolor<2-3>{blue}{x_i}$\\
+\visible<2-3>{\texttt{y \textasciitilde{} \visible<2>{\textcolor{red}{1} +} \visible<2-3>{\textcolor{blue}{x}}}}}
+\end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Interpretation: Linear Models}
+  \cimage[.8\linewidth]{img/extrapolating.png}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Interpretation: Decisions}
+  \begin{enumerate}
+  \item is the intercept meaningful?
+    \begin{itemize}
+    \item can I make it meaningful using \term{scaling}?\ars{\ra{} lec.6}
+    \end{itemize}
+    \spc\pause
+  \item do the units of $y$ and $b$ aid interpretation?
+    \begin{itemize}
+    \item can I help interpretability using
+      \term{standardisation}?\ars{\ra{} lec.8}
+    \item often useful to report $b$s and $\beta$s
+    \end{itemize}
+\spc\pause
+\item is the coding of nominal variables sensible?
+  \begin{itemize}
+  \item right intercept? \ars{\ra{} \R{relevel()} lec.8}
+  \item \textcolor{gray}{could I use a better coding?}
+  \end{itemize}
+
+  \end{enumerate}
+  
+  
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Interpretation: Interactions}
+\begin{columns}
+  \column{.49\linewidth}
+  \begin{itemize}
+  \item \emph{really} useful to have worked through lab~8 (``One Direction'')
+  \item<2-> although coffee is more interesting\ldots{}
+
+\end{itemize}
+\column{.5\linewidth}
+\begin{overprint}
+\onslide<1| handout:0>\cimage{img/1d}
+\onslide<2-| handout:1>\cimage{img/n_coffee}
+\end{overprint}
+\end{columns}
+\spc\pause[2]
+
+<<coffee,include=F>>=
+load('R/l8.Rdata')
+coffee <- soup
+rm(soup)
+@ 
+<<cof2>>=
+summary(coffee)
+@ 
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Two Models}
+  \begin{itemize}
+  \item without interaction
+  \end{itemize}
+<<tmod,eval=F>>=
+mod.0 <- lm(SAT ~ fl + sc, data=coffee)
+summary(mod.0)
+@ 
+<<tmod.1,echo=F>>=
+mod.0 <- lm(SAT ~ fl + sc, data=coffee)
+.pp(summary(mod.0),l=list(c(10:13)))
+@ 
+\begin{itemize}
+\item with interaction
+\end{itemize}
+<<tmod.2,eval=F>>=
+mod.1 <- lm(SAT ~ fl * sc, data=coffee)
+summary(mod.1)
+@ 
+<<tmod.3,echo=F>>=
+mod.1 <- lm(SAT ~ fl * sc, data=coffee)
+.pp(summary(mod.1),l=list(c(10:14)))
+@ 
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{What Do the Models Say?}
+<<doplot3,include=F,message=F>>=
+require(rsm)
+persp(mod.0, fl~sc,main='Coffee Satisfaction',col='red',zlim=c(-15,100))
+persp(mod.1, fl~sc,main='Coffee Satisfaction',col='red',zlim=c(-15,100))
+@ 
+\begin{columns}
+  \column{.49\linewidth}
+ \cimage[.9\linewidth]{img/auto-doplot3-1}
+\par
+\begin{center}
+without interaction  
+
+<<c1a,eval=F>>=
+coef(mod.0)
+@ 
+<<c1,echo=F>>=
+t(coef(mod.0))
+@ 
+
+\end{center}
+\column{.49\linewidth}
+\cimage[.9\linewidth]{img/auto-doplot3-2}
+\par
+\begin{center}
+with interaction
+<<c2a,eval=F>>=
+coef(mod.1)
+@ 
+<<c2,echo=F>>=
+t(coef(mod.1))
+@ 
+
+\end{center}
+\end{columns}
+
+
+\end{frame}
+
+\part{Reporting}
+\section{Reporting}
+\subsection[APA]{APA format}
+\begin{frame}[plain]
+  \partpage
+\end{frame}
+
+\begin{frame}
+  \frametitle{Reporting Results: General Formatting}
+  \begin{itemize}
+  \item primary source for psychology (and much empirical linguistics)
+    is the American Psychology Association Publication Manual, 6th Edn.
+    
+  \item plenty of material on the website: \url{http://www.apastyle.org/}
+  \end{itemize}
+  \spc
+  \pause
+  \begin{itemize}
+  \item there are formal ways to present statistical results
+  \item plenty of good resources, e.g., \url{http://my.ilstu.edu/~jhkahn/apastats.html}
+  \end{itemize}
+\end{frame}
+
+\subsection{Tables}
+\begin{frame}
+  \frametitle{Reporting Results: Tables}
+  \begin{itemize}
+  \item basic pointers
+  \end{itemize}
+  \spc
+  \begin{enumerate}
+  \item if you have fewer than 2 rows/columns, you don't need a table
+  \item number tables sequentially and refer to them in text
+    \begin{itemize}
+    \item \smex{table~1 contains descriptive statistics\ldots}
+    \end{itemize}
+  \item be consistent in your formatting
+    \begin{itemize}
+    \item consistency is more important than exactly meeting APA standards
+    \end{itemize}
+  \item include a brief informative title/caption above the table
+
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Example Table}
+\begin{table}[h]
+	\centering
+	\caption{Proportions of trials in which participants referred
+          disfluently to disfluency images for Experiments 1 and 2. Standard errors are given in parentheses.}\label{tab:disf}
+ \begin{tabular}{llrr}\hline
+\multicolumn{1}{l}{}&
+\multicolumn{1}{l}{}&
+\multicolumn{1}{c}{Confederate Absent}&
+\multicolumn{1}{c}{Confederate Present}
+\tabularnewline \hline
+Exp.~1&Easy Images&$0.06~(0.06)$&$0.06~(0.06)$\tabularnewline
+&Hard Images&$0.12~(0.12)$&$0.12~(0.12)$\tabularnewline
+\hline
+Exp.~2&Easy Images&$0.10~(0.06)$&$0.11~(0.07)$\tabularnewline
+&Hard Images&$0.33~(0.10)$&$0.35~(0.10)$\tabularnewline
+\hline
+\end{tabular}
+\end{table}
+\end{frame}
+
+\subsection{Figures}
+
+\begin{frame}{Reporting Results: Figures}
+  
+  \cimage{img/axes.png}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Reporting Results: Figures}
+  \begin{itemize}
+  \item we spent a lot of time in early labs making graphs\ldots
+  \end{itemize}
+\spc
+\begin{enumerate}
+\item figures include all illustrations that aren't tables (chart,
+  graph, photograph, drawing\ldots)
+\item number figures sequentially and refer to them in text
+  \begin{itemize}
+  \item tables and figures have different numbering
+  \end{itemize}
+\item for graphs, make sure
+  \begin{itemize}
+  \item axes are labelled appropriately
+  \item legends are included where necessary
+  \end{itemize}
+\item include a brief informative title/caption \emph{below} the figure
+  
+\end{enumerate}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Example Figure}
+\begin{figure}[h]
+\cimage{img/stutter_fig}  
+\caption{Scatterplots showing, for each PWS, total number of onset
+  errors (x axis) plotted against self ratings of difficulty speaking
+  fluently in 10 commonly occurring speaking situation (y axis). From
+  left to right, the three plots show raw numbers of onset errors in
+  (1) inner speech; (2) overt speech (self-reports); and (3) overt
+  speech (experimenter ratings). The unbroken regression line depicts
+  the relationship between the two variables when two outliers (marked
+  with $\circ$) are excluded.}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Reporting Results: Do's and Don'ts}
+  \begin{enumerate}
+  \item don't repeat information (\emph{summarise} figures or tables
+    in the text)
+  \item be concise
+  \item provide rationales for the decisions you make, and be
+    consistent
+  \item describe all your steps, but only include full diagnostic
+    information for key analyses
+  \end{enumerate}
+  
+\end{frame}
+
+\mode<beamer>
+
+{\usebackgroundtemplate{\includegraphics[width=\paperwidth]{img/fin}}
+\begin{frame}[plain]
+~
+\end{frame}}
+
+\mode
+<all>
+
+
+% \begin{frame}
+%   \frametitle{The End\ldots}
+%   \begin{itemize}
+%   \item last lab \emph{3pm today}
+%   \end{itemize}
+  
+%   \spc
+%   \begin{block}{Office Hours}
+%       \begin{itemize}
+% \item  Martin \tabto{3cm} Thu \tabto{5cm} ~~9:30--11:00
+% \item Alex \tabto{3cm} Mon \tabto{5cm} 14:30--16:30
+% \item James \tabto{3cm} Tue, Wed \tabto{5cm} 11:00--12:00
+      
+ 
+%       \end{itemize}
+   
+ 
+%   \end{block}
+
+
+% \end{frame}
+
+\end{document}
