@@ -61,17 +61,18 @@ source('R/preamble.R') # useful functions
 \begin{frame}{The R Team}
   \begin{block}{Course Leaders}
     Martin Corley, Room G8, 7GS \atright{\url{Martin.Corley@ed.ac.uk}}\\
-    Pavel Iosad, Room 3.08, DSB \atright{\url{Pavel.Iosad@ed.ac.uk}}
+    Milan Val\'{a}\v{s}ek, Room G9, 7GS \atright{\url{Milan.Valasek@ed.ac.uk}}
   \end{block}
-  \begin{alertblock}{Teaching Fellow}
-  Milan Val\'{a}\v{s}ek, Room G6, 7GS \atright{\url{Milan.Valasek@ed.ac.uk}}\\
-  \textcolor{gray}{Luna de Ferrari, Room G6, 7GS \atright{\url{luna.deferrari@ed.ac.uk}}}
+  \begin{alertblock}{Teaching Fellows}
+    Milan Val\'{a}\v{s}ek, Room G9, 7GS \atright{\url{Milan.Valasek@ed.ac.uk}}\\    
+  \textcolor{gray}{Anastasia Ushakova, Room G9, 7GS \atright{\url{Anastasia.Ushakova@ed.ac.uk}}}
     \end{alertblock}
 %  \spc
   \begin{block}{Tutor Team}
 \begin{tabular}{p{.4\linewidth}p{.4\linewidth}}
-Amrita Ahuwalia &  Ruth Corps \\
-Andres Karjus & Daisy Smith \\
+Amrita Ahuwalia &  Andres Karjus \\
+Karim Rivera Lares & Lydia Speyer \\
+Marios Theocharopoulos & Nikolas Theodoropoulos \\
 \end{tabular}  
 \end{block}
 \atright{\pgfimage[width=.25\linewidth]{img/a-team-van.jpg}}
@@ -312,7 +313,8 @@ pp <- tm_map(pp,removeWords,stopwords('english'))
 pp <- tm_map(pp,stemDocument)
 pp <- tm_map(pp,removePunctuation)
 pp <- tm_map(pp, PlainTextDocument)
-wordcloud(pp, scale=c(5,0.5), max.words=150, random.order=FALSE, rot.per=0.35, colors=brewer.pal(12,'Dark2'))
+wordcloud(pp, scale=c(5,0.5), max.words=150, random.order=FALSE, rot.per=0.35,
+          colors=brewer.pal(12,'Dark2'))
 @ 
 % should work now  
 \end{frame}
@@ -836,7 +838,7 @@ so far, we've only talked about items with changes\ldots{}
     \item outcomes outwith the `bar' are relatively unlikely unless
       `something's going on'
   \end{itemize}
-\cimage[.6\linewidth]{img/auto-heads3-1}
+\cimage[.5\linewidth]{img/auto-heads3-1}
   
 \end{frame}
 

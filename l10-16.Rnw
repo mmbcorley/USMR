@@ -599,7 +599,7 @@ persp(mod.1, fl~sc,main='Coffee Satisfaction',col='red',zlim=c(-15,100))
 @ 
 \begin{columns}
   \column{.49\linewidth}
- \cimage[.9\linewidth]{img/auto-doplot3-1}
+ \cimage[.8\linewidth]{img/auto-doplot3-1}
 \par
 \begin{center}
 without interaction  
@@ -613,7 +613,7 @@ t(coef(mod.0))
 
 \end{center}
 \column{.49\linewidth}
-\cimage[.9\linewidth]{img/auto-doplot3-2}
+\cimage[.8\linewidth]{img/auto-doplot3-2}
 \par
 \begin{center}
 with interaction
@@ -626,14 +626,30 @@ t(coef(mod.1))
 
 \end{center}
 \end{columns}
+\atright{\hyperlink{rep}{\beamerskipbutton{skip stuff}}}
 
+\end{frame}
+
+\begin{frame}[fragile]{Some Sample Data}
+<<loaddata,cache=F>>=
+load(url('https://is.gd/usmrdata'))
+# ls()
+head(usmr)
+@ 
+
+\begin{itemize}
+\item \R{lects}: lectures attended
+\item \R{prac}: hours spent on lab work
+\item \R{likestats}: whether a student likes stats
+\item \R{PASS}: did they pass the course?
+\end{itemize}
 
 \end{frame}
 
 \part{Reporting}
 \section{Reporting}
 \subsection[APA]{APA format}
-\begin{frame}[plain]
+\begin{frame}[plain,label=rep]
   \partpage
 \end{frame}
 

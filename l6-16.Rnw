@@ -894,10 +894,10 @@ matlines(nf,y,col=c('red','blue','blue'),lwd=c(2,1,1),lty=c(1,2,2))
 
 
 
-% {\usebackgroundtemplate{\includegraphics[width=\paperwidth]{img/fireworks}}
-% \begin{frame}<handout:0>[t,plain]
-% ~
-% \end{frame}}
+{\usebackgroundtemplate{\includegraphics[width=\paperwidth]{img/pumpkin}}
+\begin{frame}<handout:0>[t,plain]
+~
+\end{frame}}
 
 
 \end{document}
