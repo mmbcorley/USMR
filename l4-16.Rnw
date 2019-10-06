@@ -1,0 +1,706 @@
+\documentclass[compress,11pt,aspectratio=1610]{beamer}
+\usetheme{Luebeck}
+\usecolortheme{crane}
+\setbeamertemplate{navigation symbols}{}
+\usepackage{luebeck-numbers}
+
+% new data
+
+\usepackage{nbeamer}
+\usepackage{centeredimage}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage{colortbl}
+\usepackage{url}
+\urlstyle{same}
+\newcommand*{\ars}[1]{\atright{\mbox{\tiny #1}}\\}
+\renewcommand{\term}[1]{\textbf{\usebeamercolor[fg]{titlelike}{#1}}}
+\newcommand*{\spc}[1][1em]{\vspace*{#1}\par}
+\usepackage{xspace}
+\renewenvironment{knitrout}{\setlength{\topsep}{0mm}}{}
+\newcommand{\R}[1]{\colorbox{shadecolor}{\texttt{\hlstd{\small #1}}}} % R code, requires knitr defs
+\newcommand*{\Resize}[2]{\resizebox{#1}{!}{$#2$}}%
+
+<<setup, include=FALSE>>=
+require(knitr)
+# this bit makes the tildes lower
+.hook_source = knit_hooks$get('source')
+knit_hooks$set(source = function(x, options) {
+  txt = .hook_source(x, options)
+  # extend the default source hook
+  gsub('~', '\\\\textasciitilde', txt)
+})
+#
+knit_hooks$set(par=function(before, options, envir){
+if (before && options$fig.show!='none') par(mar=c(5.1,4.1,2.1,2.1))
+}, crop=hook_pdfcrop)
+#
+opts_chunk$set(fig.path='img/auto-',fig.align='center',fig.show='hide',size='scriptsize',warning=FALSE,tidy=TRUE,tidy.opts=list(keep.blank.line=FALSE, width.cutoff=80),fig.width=5,fig.height=4.15,par=TRUE)
+# set everything to handlable numbers of digits (reclaim screen space!)
+options(replace.assign=TRUE,width=80,digits=2)
+#options(mar=c(5.1,4.1,1.1,2.1),cex=2,cex.text=2)
+source('R/preamble.R') # useful functions
+@ 
+
+
+\title[USMR~4]{How Statistics Work (2)}
+\subtitle{Univariate Statistics and Methodology using R}
+\author{Martin Corley}
+\date{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ----------------------------------
+
+\begin{document}
+
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+\begin{frame}[plain]
+\begin{center}
+\fbox{``people tend to automatically read words in front of them''}
+\spc
+\pause
+where does a general statement like this derive from?
+\end{center}
+
+\spc
+\begin{itemize}
+\item we need a way to \term{formulate} the \term{hypothesis} such
+  that it has\ldots{}
+\begin{itemize}
+\item a specific operationalisation of the question;
+\item a means of finding out what people do;
+\item criteria for determining whether the hypothesis is
+  confirmed
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Today}
+\tableofcontents
+\end{frame}
+
+
+
+%% \begin{frame}
+%%   \frametitle{Logic vs.\@ The Real World}
+%% \begin{columns}
+%% \column{.4\linewidth}
+%% Boris Johnson lied to the Queen
+%% \cimage{img/bojo-nose.png}
+%% \column{.55\linewidth}
+%% \begin{itemize}
+%% \item no certainty; ``99\% certain''
+%% \end{itemize}
+%% \end{columns}
+%% \end{frame}
+
+
+%%% STRUCTURE:
+% But the world is probabilistic -> ("other factors", randomness)
+% We can't measure everything -> ("samples")
+% Need to specify the structure we *think* the world has (-> IVs, DVs, R)
+
+
+%% --------------------------------------------------------------
+\section[Variables]{Predictors and `Prediction'}
+\subsection{Dependent}
+
+\begin{frame}
+\frametitle{Dependent Variables}
+\fbox{``people tend to automatically read words in front of them''}
+\spc
+\begin{itemize}
+\item how can we measure `automatic reading'?
+\pause
+\item \term{dependent variables}: measures of behaviour that
+  \emph{depend} on some other factor \uncover<3->{\alert<3->{or factors}}
+  \begin{itemize}
+  \item time to complete some task;
+  \item numbers of correct answers (or even exam scores!);
+  \item judgements (e.g., of attractiveness, etc.);
+  \item assignments to an arbitrary category
+    
+  \item<3-| alert@3-> height
+  \end{itemize}
+\pause
+\spc
+\item might automatic reading \emph{slow people down} if it interferes
+  with some other task?
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Stroop (1935)}
+\emph{name the colours} the words are printed in.  Don't read them!
+\spc
+\pause
+\begin{center}
+%\begin{beamerboxesrounded}[shadow=true,scheme=block]{}%
+{\huge
+\begin{tabular}{llll}
+\rowcolor{gray}\textcolor{yellow}{yellow} &
+\textcolor{green}{green} & \textcolor{red}{red} & \textcolor{blue}{blue}\\
+\rowcolor{gray}\textcolor{green}{red} & \textcolor{red}{blue} & \textcolor{red}{green} & \textcolor{blue}{yellow} \\
+\rowcolor{gray}\textcolor{yellow}{green} &
+\textcolor{green}{yellow} & \textcolor{yellow}{blue} &
+\textcolor{green}{red}\\
+\rowcolor{gray}\textcolor{red}{blue} & \textcolor{blue}{yellow}
+& \textcolor{red}{green} & \textcolor{green}{red} \\
+\rowcolor{gray}\textcolor{yellow}{red} & \textcolor{blue}{green} &
+\textcolor{blue}{yellow} & \textcolor{yellow}{blue} \\
+\end{tabular}}
+%\end{beamerboxesrounded}%
+\end{center}
+\end{frame}
+
+
+\subsection{Independent}
+
+\begin{frame}
+\frametitle{Problems with Measurement}
+\fbox{``people tend to automatically read words in front of them''}
+\spc
+\begin{itemize}
+\item we think that conflicting names will \emph{slow people down}
+  when they try and name colours, presumably because they can't
+  stop automatically reading the names!
+\item but ``slow down'' doesn't make any sense on its own\ldots{}%
+\end{itemize}
+\end{frame}
+
+%%%
+
+\begin{frame}
+\frametitle{Independent Variables}
+\begin{itemize}
+\item \emph{almost all} experiments compare two or more situations
+\item the changing of the situation is called the \term{independent
+    variable}
+\item changes are \term{independent} of participants' actions
+\begin{itemize}
+\item either the \term{experimenter} has manipulated the situation
+\item or the experimenter is making use of some pre-existing
+  difference (e.g., gender)
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Choosing IVs}
+\begin{itemize}
+\item we think that conflicting names will \emph{slow people down}
+  when they try and name colours
+\item but ``slow down'' doesn't make any sense on its own\ldots{}%
+
+\spc
+
+\item need to compare words which interfere with colours (\textcolor{green}{red}) with non-interfering words (\textcolor{green}{green})
+\end{itemize}
+\pause
+\begin{block}{independent variable = whether or not word interferes}
+\begin{itemize}
+\item two \term{levels}
+\item<3-> this is a \emph{nominal} variable
+\item<3-> in \R{R}, nominal variables are represented using
+  \visible<4->{\emph{factors}}
+\item<5-> NB., variable \emph{type} (nominal) and \emph{function}
+  (independent) are orthogonal
+\end{itemize}%
+\end{block}
+
+\end{frame}
+
+\begin{frame}\frametitle{An experiment?}
+so far, we have a \term{factorial} design
+\begin{itemize}
+\item we have a \term{dependent variable}: time to name the colours
+  words are printed in
+\item we are manipulating one \term{independent variable} (or factor),
+  with two \term{levels}:
+  whether the names of the printed words match their colours or not
+\item we are in a position to rephrase our hypothesis
+\end{itemize}
+\pause
+\begin{center}
+  \fbox{\parbox{\linewidth}{when timed naming the colours that words
+      are printed in, people will take longer to name the colours
+      \atright{\term{(DV)}}\\ when the content of the words doesn't
+      match than when it does\atright{\term{(IV)}}}}
+\end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Nomenclature}
+\Large
+  \begin{center}
+  \begin{tabular}{ll}
+    independent variable & dependent variable \\
+    factor & data \\
+    predictor & predicted \\
+  \end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Variables on Graphs}
+
+<<pretty,echo=F,results='hide',message=F>>=
+heights <- read.csv('R/auto-heights.csv')
+female <- heights$HEIGHT[heights$gender == 'Female']
+male <- heights$HEIGHT[heights$gender == 'Male']
+
+# histograms with semi-transparent colouring
+hist(heights$HEIGHT[heights$gender == 'Female'],col=rgb(1,0,0,.5),xlim=c(min(heights$HEIGHT-5),max(heights$HEIGHT+5)),ylim=c(0,max(dnorm(mean(female),mean(female),sd(female)/sqrt(length(female))),dnorm(mean(male),mean(male),sd(male)/sqrt(length(male))))),freq=F,main='class heights by gender',xlab='height in cm')
+hist(heights$HEIGHT[heights$gender == 'Male'],col=rgb(0,0,1,.5),add=T,freq=F)
+x <- seq(min(heights$HEIGHT-5),max(heights$HEIGHT+5),length.out = 253)
+
+# draw relevant normal curves
+lines(x,dnorm(x,mean=mean(female),sd=sd(female)),col=rgb(1,0,0,.5),lwd=3,type='l')
+lines(x,dnorm(x,mean=mean(male),sd=sd(male)),col=rgb(0,0,1,.5),lwd=3,type='l')
+
+# add lines equivalent to standard error curves (see "sd" calculations)
+lines(x,dnorm(x,mean=mean(female),sd=sd(female)/sqrt(length(female))),col=rgb(1,0,0,.6),lwd=3,type='l')
+lines(x,dnorm(x,mean=mean(male),sd=sd(male)/sqrt(length(male))),col=rgb(0,0,1,.6),lwd=3,type='l')
+
+legend('topright',col=c('red','blue'),legend=c('female','male'),lwd=3)
+source('~/cd/R/my_bp.R')
+heights <- heights[heights$gender != 'Other',]
+heights <- droplevels(heights)
+bpm <- tapply(heights$HEIGHT,list(heights$gender),mean)
+bse <- tapply(heights$HEIGHT,list(heights$gender),st.err)
+my.bp(bpm,bse,offset=100,ylim=c(100,190),col=c('red','blue'),ylab='height in cm')
+plot(heights[,1:2],col=c('red','blue'),ylab='height in cm')
+require(vioplot)
+with(heights,vioplot(HEIGHT~gender,col=c('red','blue'),ylab='height in cm'))
+@ 
+
+\begin{overprint}
+  \onslide<1| handout:0>
+\cimage[.6\linewidth]{img/auto-pretty-1}
+  \onslide<2| handout:1>
+\cimage[.6\linewidth]{img/auto-pretty-2}  
+  \onslide<3| handout:0>
+\cimage[.6\linewidth]{img/auto-pretty-3}
+  \onslide<4| handout:0>
+\cimage[.6\linewidth]{img/auto-pretty-4}  
+\end{overprint}
+\begin{itemize}
+\item<2-> IVs on $x$-axis; DVs on $y$-axis
+\end{itemize}
+
+\end{frame}
+
+
+\section{Experiments}
+\subsection[Interpreting]{Interpreting Experiments}
+
+\begin{frame}\frametitle{An experiment?}
+
+\begin{center}
+  \fbox{\parbox{\linewidth}{when timed naming the colours that words
+      are printed in, people will take longer to name the colours
+      \atright{\term{(DV)}}\\ when the content of the words doesn't
+      match than when it does\atright{\term{(IV)}}}}
+\end{center}
+\begin{itemize}
+\item we take this to \emph{imply} that people can't help reading
+  words automatically (because that's the starting hypothesis we used
+  to generate an experiment)
+
+\item note that we \emph{can't} prove our hypothesis% (but we can
+%provide results that are \term{consistent} with it)
+\end{itemize}
+\end{frame}
+
+%% \begin{frame}
+%% \frametitle{About our experiment}
+%% \begin{itemize}
+%% \item does it measure what we think it
+%%   measures?
+%% \item should we get the same people to take part in both conditions?
+%% \atright{(more in lecture~3)}
+%% \end{itemize}
+%% \pause
+%% assume that the average reaction time for \term{mismatched}
+%% colour/words is longer than for \term{matched} colour/words
+%% \spc
+
+%% \begin{itemize}
+%% \item what is the likelihood that we'd get the same pattern of results
+%%   if we tried again?\atright{(l.~2)}
+%% \item are the average scores enough information?\atright{(1B)}
+%% \item can we generalise from however many people took part in our
+%%   experiment to `people in general'?\atright{(1B)}
+%% %\item what should we tell people about the experiment and why they did
+%% %  it?\atright{(l.~6)}
+%% \end{itemize}
+%% \end{frame}
+
+\subsection[Types]{Types of experiment}
+
+
+\begin{frame}\frametitle{Types of experiment}
+\begin{itemize}
+\item \term{factorial design}: an experimenter manipulates an
+  independent variable with distinct \term{levels}
+\begin{itemize}
+\item e.g., Stroop task
+\end{itemize}
+\item \term{correlational design}: independent variable has
+  no obvious distinct levels
+\begin{itemize}
+\item e.g., do hours in labs predict USMR exam results?
+\item<bad@1-> NB: correlation can be difficult to interpret
+\end{itemize}
+\item \term{single-case studies}: can be factorial \emph{or} correlational
+\begin{itemize}
+\item e.g., study of a brain-injured patient
+\end{itemize}
+\item \term{observational studies}: can be factorial \emph{or}
+  correlational
+\begin{itemize}
+\item no explicit task is given: DVs and IVs are extrapolated in
+  observational settings
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%% \subsection[Estimating]{Estimating Probability}
+
+%% \begin{frame}
+%% \frametitle{Everything has a Probability}
+%% \begin{itemize}
+%% \item probability of a volcano erupting
+%% \item probability of god existing
+%%   % \begin{itemize}
+%%   % \item \term{Pascal's Wager}
+%%   % \end{itemize}
+%% \end{itemize}
+%% \pause
+%% \begin{block}{Pascal's Wager}
+%% the real value of a lottery ticket can be calculated as
+%% \[\text{(probability of winning)} \times \text{(amount of prize)}\]
+%% (so, if $\it p(\text{winning}) = .01$ and the prize is \pounds{}100
+%% the value is $\it .01 \times \pounds{}100$, or \textbf{\pounds{}1}).
+%% \spc
+%% \pause
+%% \begin{tabular}{llll}
+%% \hline
+%% & \textbf{probability} & \textbf{prize} & \textbf{value} \\\hline
+%% god doesn't exist & very high & zero & nothing \\
+%% god exists & very small & eternal life & \uncover<4->{\alert{$\it >0$}} \\\hline
+%% \end{tabular}
+
+%% \end{block}
+
+%% \end{frame}
+
+%% \begin{frame}
+%% \frametitle{Estimating Probabilities is Hard}
+%% \pgfdeclareimage[width=.05\linewidth]{dice1}{img/dice1}%
+%% \pgfdeclareimage[width=.05\linewidth]{dice2}{img/dice2}%
+%% \pgfdeclareimage[width=.05\linewidth]{dice3}{img/dice3}%
+%% \pgfdeclareimage[width=.05\linewidth]{dice4}{img/dice4}%
+
+%% \begin{itemize}
+%% \item $p($\raisebox{-.7ex}{\pgfuseimage{dice1}~%
+%%   \pgfuseimage{dice2}~%
+%%   \pgfuseimage{dice3}~%
+%%   \pgfuseimage{dice4}}$) \simeq {\bf .28}$ \atright{\emph{chance}}
+%% \item $p(\text{volcano erupts}) =$ ``very small''\atright{\emph{other
+%%       factors}}
+%% \item $p(\text{god exists}) =$ ``\ldots''\atright{\emph{other
+%%       factors}}
+%% \end{itemize}
+%% \pause
+%% \spc
+%% \begin{center}
+%%   \fbox{\parbox{\linewidth}{when timed naming the colours that words
+%%       are printed in, people will take longer to name the colours
+%%       \atright{\term{(DV)}}\\ when the content of the words doesn't
+%%       match than when it does\atright{\term{(IV)}}}}
+%% \end{center}
+%% \begin{itemize}
+%% \item so far, \term{confirmed}/\term{disconfirmed} \ra{}
+%%   ``true/false''
+%% \item but there is a \term{probability} that the hypothesis is true!
+%% \item difficult to estimate, because it involves \emph{other factors}
+%% \end{itemize}
+%% \end{frame}
+
+
+\section[Hypotheses]{Testing Hypotheses}
+\subsection[Experimental]{The Experimental Hypothesis}
+
+\begin{frame}
+\frametitle{Experimental Hypotheses}
+\uncover<3->{\term{Experimental Hypothesis (H$_{\text{1}}$)}}
+\begin{center}
+  \fbox{\parbox{\linewidth}{when timed naming the colours that words
+      are printed in, people will take longer to name the colours
+      \atright{\term{(DV)}}\\ when the content of the words doesn't
+      match than when it does\atright{\term{(IV)}}}}
+\end{center}
+\begin{itemize}
+\item we cannot prove that the hypothesis is \emph{true}\ldots{}
+\pause[2]
+\item easier to estimate probabilities due to \emph{chance}
+\end{itemize}
+\pause[3]
+\term{Null Hypothesis (H$_{\text{0}}$)}
+\begin{center}
+  \fbox{\parbox{\linewidth}{any differences in times to name colours
+      will be \emph{due to chance}}}
+\end{center}
+\end{frame}
+
+%% \begin{frame}[fragile]
+%%   \frametitle{Sense Checking: Tailedness}
+  
+  
+  
+%% \end{frame}
+
+\subsection[Null]{The Null Hypothesis}
+
+\begin{frame}
+\frametitle{Null Hypothesis (H$_{\text{0}}$)}
+\begin{center}
+  \fbox{\parbox{\linewidth}{any differences in times to name colours
+      will be \emph{due to chance}}}
+\end{center}
+\begin{itemize}
+\item can \emph{estimate} the probability of a given outcome happening
+  by chance
+\atright{\mbox{\emph{\ra{} statistical tests}}}
+\begin{itemize}
+\item there will \emph{always} be a probability, \emph{however small},
+  of any pattern of results
+\end{itemize}
+\item if the probability is \emph{small enough} we can \term{reject
+  H$_{\text{0}}$}
+\begin{itemize}
+\item by implication, this means we can \term{accept} (confirm)
+\term{H$_{\text{1}}$}
+\pause
+\item we \emph{can't} prove that H$_{\text{1}}$ is the \emph{cause}
+of any differences
+\item we have to \emph{argue} that our original hypothesis is the
+best explanation \atright{\emph{\ra{}~interpretation}}
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\subsection{Maths}
+
+\begin{frame}
+  \frametitle{Operationalising H$_{\text{0}}$}
+  \begin{center}
+  \fbox{\parbox{\linewidth}{any differences in times to name colours
+      will be \emph{due to chance}}}
+\end{center}
+
+\begin{itemize}
+\item equally likely to get a positive as a negative difference
+\item[\ra] under H$_{\text{0}}$, the \textbf{mean difference} in the
+  population should be \textbf{zero}
+  
+\item<2-> so if we keep sampling from the population \term{of
+    differences}, we should get:
+  \begin{itemize}
+  \item<visible@3-> a normal distribution (standard error
+    distribution) with a \emph{mean of zero}
+  \end{itemize}
+\spc
+  \item<visible@3-> the further an observed mean difference is from
+    zero, the lower the probability that it is due to chance
+\spc\pause[4]
+\item let's fake an experiment!
+\end{itemize}
+\end{frame}
+
+\begin{frame}<1| handout:0>
+\begin{columns}
+\column{.7\linewidth}
+  \begin{center}
+\Large don't try this at home  
+\end{center}
+\column{.28\linewidth}
+\cimage{img/stapel}
+\end{columns}
+\end{frame}
+
+\begin{frame}<0| handout:1>[fragile]
+  \frametitle{Faking an Experiment}
+\begin{columns}
+  \column{.6\linewidth}
+<<fakeme>>=
+# make a sample of differences (mean = 10)
+diffs <- rnorm(24, mean=10, sd=13)
+# add a bit of (uniform) noise
+diffs <- diffs + runif(24,-3,3)
+
+# make sample of "matching" naming times
+mat <- runif(24,700,900)
+# and make mismatches
+mismat <- mat+diffs
+plot(density(mismat-mat))
+@ 
+\column{.35\linewidth}
+\cimage{img/auto-fakeme-1}
+\end{columns}
+\end{frame}
+
+
+\subsection[Criteria]{Setting Criteria: $\alpha$}
+
+
+
+
+\begin{frame}
+\frametitle{Setting Criteria ($\alpha$)}
+\begin{center}
+  \fbox{\parbox{\linewidth}{any differences in times to name colours
+      will be \emph{due to chance}}}
+\end{center}
+\begin{itemize}
+\item what probability of the experimental results we obtain is
+  \emph{small enough} for us to reject H$_{\text{0}}$?
+\end{itemize}
+\pause
+\textbf{problems}
+\begin{itemize}
+\item \term{type 1 error:} although we rejected H$_{\text{0}}$ and
+  accepted H$_{\text{1}}$ (small probability of H$_{\text{0}}$),
+  \emph{the differences were really due to chance}
+\item \term{type 2 error:} although we accepted H$_{\text{0}}$ and
+  rejected H$_{\text{1}}$ (large probability of H$_{\text{0}}$),
+  \emph{the differences were really due to the experimental manipulation}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Choosing $\alpha$}
+\begin{center}
+  \fbox{\parbox{\linewidth}{any differences in times to name colours
+      will be \emph{due to chance}}}
+\end{center}
+\begin{itemize}
+\item what probability of the experimental results we obtain is
+  \emph{small enough} for us to reject H$_{\text{0}}$?
+  \begin{itemize}
+  \item what threshold (\term{$\alpha$ level}) should we set?
+  \end{itemize}
+\pause
+\item obviously, this depends on what the experiment is for!
+\item \emph{drug trial}: want to \emph{minimize} the chance of a
+  \term{type 1 error} (results really due to chance)
+\item \emph{general psychology:} want a good compromise between the
+  two possible errors
+\pause
+\item in psychology, the most used criterion is \textcolor{red!50!black}{$p(\text{H$_{\text{0}}$})
+  < .05$} (usually abbreviated as \textcolor{red!50!black}{$p < .05$})
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[plain]
+~
+{\huge
+ psychological ``results'' can have as much as a \term{1 in
+    20} probability of being entirely due to chance!}
+\pause
+\spc
+\begin{itemize}
+\item a difference in DVs is said to be \term{significant} if $p < .05$
+\end{itemize}
+
+\end{frame}
+
+
+\section[df]{Degrees of Freedom (df)}
+
+\subsection{How they're used}
+
+\begin{frame}\frametitle{Distributions and Samples}
+\begin{itemize}
+\item we want to estimate the distribution of a \term{population}, but
+we're working with a \term{sample}
+\item in order to estimate the population distribution we need to
+know \emph{how free the sample was to vary}
+\item \term{degrees of freedom}
+\end{itemize}
+% \pause
+% \spc
+% \item already snuck in to last lecture
+% \[ \sigma = \sqrt{\frac{\sum{(x-\mu)^2
+% }}{\textcolor{red}{n-1}}} \]
+
+\end{frame}
+
+\subsection{What they mean}
+
+
+\begin{frame}\frametitle{Degrees of Freedom}
+
+given a \term{sample}, we need to estimate how \emph{free it is to
+  vary} in order to be able to estimate its relation to the \term{population}
+\spc
+
+\begin{itemize}
+\item \term{degrees of freedom} express how free a sample is to vary
+\item they are related to the \term{DV} (and the \term{IV})
+\item ``how many of the observations are
+\emph{free to vary} (i.e., could have been different) giving the same outcome?''
+\pause
+
+\item e.g., imagine that the \term{mean ($\mu$)} of a sample is
+  \emph{10}, and that there are \emph{5} participants in your sample.
+  How many of the
+  scores can be \emph{anything at all} without affecting $\mu$?
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}\frametitle{Degrees of Freedom 2}
+we know that $n = 5$ and $\mu = 10$ (so $\sum{(x)}=50$)\ldots{}
+\begin{center}
+\begin{tabular}{rrrrr|cr}
+\hline
+1 & 2 & 3 & 4 & 5 & \boldmath{$\sum{(x)}$} & \boldmath{$\mu$} \\\hline
+
+\visible<2->{8} & \visible<3->{13} & \visible<4->{12} &
+\visible<4->{7} & \visible<5->{\alert{10}} &
+\only<2| handout:0>{~8}\only<3| handout:0>{21}\only<4| handout:0>{40}\only<5-| handout:1>{50} &
+\visible<5->{\textbf{10}} \\
+
+\visible<2->{-4} & \visible<3->{19} & \visible<4->{12} &
+\visible<4->{-8} & \visible<5->{\alert{31}}& 
+\only<2| handout:0>{-4}\only<3| handout:0>{15}\only<4|
+handout:0>{19}\only<5-| handout:1>{50} &
+\visible<5->{\textbf{10}} \\\hline
+\end{tabular}
+\end{center}
+
+\pause[5]
+\begin{itemize}
+\item \emph{4} of the observations can be \emph{anything} (the last can always
+be adjusted to ensure that $\mu=10$).  So the sample has \term{4 degrees of freedom}.
+\item in general, $\text{df}=\textcolor{red}{n-1}$
+\begin{itemize}
+\item explains why so many formulae (including that for $\sigma$) include $n-1$!
+\end{itemize}
+\item also true for IV: how many of the \term{means for each level}
+  can vary with the outcome (difference) being the same?
+\end{itemize}
+\end{frame}
+
+
+
+\end{document}

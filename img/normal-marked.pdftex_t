@@ -1,0 +1,43 @@
+\begin{picture}(0,0)%
+\pgfimage{img/normal-marked}%
+\end{picture}%
+\setlength{\unitlength}{3947sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined%
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(8546,5122)(1189,-5761)
+\put(6361,-2821){\makebox(0,0)[b]{\smash{{\SetFigFont{20}{24.0}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,1}$\sigma=1$}%
+}}}}
+\put(5776,-4561){\makebox(0,0)[b]{\smash{{\SetFigFont{20}{24.0}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,1}$\mu=0$}%
+}}}}
+\put(1771,-4011){\makebox(0,0)[rb]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}0.1}%
+}}}}
+\put(1771,-3011){\makebox(0,0)[rb]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}0.2}%
+}}}}
+\put(1771,-2011){\makebox(0,0)[rb]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}0.3}%
+}}}}
+\put(1771,-1011){\makebox(0,0)[rb]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}0.4}%
+}}}}
+\put(1771,-5011){\makebox(0,0)[rb]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}0}%
+}}}}
+\put(9138,-5311){\makebox(0,0)[b]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}3}%
+}}}}
+\put(4715,-5311){\makebox(0,0)[b]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}-1}%
+}}}}
+\put(8032,-5311){\makebox(0,0)[b]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}2}%
+}}}}
+\put(6927,-5311){\makebox(0,0)[b]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}1}%
+}}}}
+\put(3610,-5311){\makebox(0,0)[b]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}-2}%
+}}}}
+\put(2504,-5311){\makebox(0,0)[b]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}-3}%
+}}}}
+\put(5821,-5311){\makebox(0,0)[b]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,1}0}%
+}}}}
+\put(5821,-5761){\makebox(0,0)[b]{\smash{{\SetFigFont{20}{24.0}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}standard deviations}%
+}}}}
+\end{picture}%

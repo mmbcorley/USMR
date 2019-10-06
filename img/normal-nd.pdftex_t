@@ -1,0 +1,19 @@
+\begin{picture}(0,0)%
+\pgfimage{img/normal-nd}%
+\end{picture}%
+\setlength{\unitlength}{3947sp}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined%
+\gdef\SetFigFont#1#2#3#4#5{%
+  \reset@font\fontsize{#1}{#2pt}%
+  \fontfamily{#3}\fontseries{#4}\fontshape{#5}%
+  \selectfont}%
+\fi\endgroup%
+\begin{picture}(2855,1472)(1432,-2072)
+\put(3107,-1414){\makebox(0,0)[b]{\smash{{\SetFigFont{8}{9.6}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,1}$\sigma$}%
+}}}}
+\put(2926,-1595){\makebox(0,0)[b]{\smash{{\SetFigFont{8}{9.6}{\familydefault}{\mddefault}{\updefault}{\color[rgb]{0,0,1}$\mu$}%
+}}}}
+\put(1529,-1310){\rotatebox{90.0}{\makebox(0,0)[b]{\smash{{\SetFigFont{8}{9.6}{\sfdefault}{\mddefault}{\updefault}{\color[rgb]{0,0,0}frequency}%
+}}}}}
+\end{picture}%

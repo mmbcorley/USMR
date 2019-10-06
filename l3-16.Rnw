@@ -1,0 +1,745 @@
+\documentclass[compress,11pt,aspectratio=1610]{beamer}
+\usetheme{Luebeck}
+\usecolortheme{crane}
+\setbeamertemplate{navigation symbols}{}
+\usepackage{luebeck-numbers}
+
+% new data
+
+\usepackage{nbeamer}
+\usepackage{centeredimage}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage{colortbl}
+\usepackage{url}
+\urlstyle{same}
+\newcommand*{\ars}[1]{\atright{\mbox{\tiny #1}}\\}
+\renewcommand{\term}[1]{\textbf{\usebeamercolor[fg]{titlelike}{#1}}}
+\newcommand*{\spc}[1][1em]{\vspace*{#1}\par}
+\usepackage{xspace}
+\renewenvironment{knitrout}{\setlength{\topsep}{0mm}}{}
+\newcommand{\R}[1]{\colorbox{shadecolor}{\texttt{\hlstd{\small #1}}}} % R code, requires knitr defs
+\newcommand*{\Resize}[2]{\resizebox{#1}{!}{$#2$}}%
+
+<<setup, include=FALSE>>=
+require(knitr)
+# this bit makes the tildes lower
+.hook_source = knit_hooks$get('source')
+knit_hooks$set(source = function(x, options) {
+  txt = .hook_source(x, options)
+  # extend the default source hook
+  gsub('~', '\\\\textasciitilde', txt)
+})
+#
+knit_hooks$set(par=function(before, options, envir){
+if (before && options$fig.show!='none') par(mar=c(5.1,4.1,2.1,2.1))
+}, crop=hook_pdfcrop)
+#
+opts_chunk$set(fig.path='img/auto-',fig.align='center',fig.show='hide',size='scriptsize',warning=FALSE,tidy=TRUE,tidy.opts=list(keep.blank.line=FALSE, width.cutoff=80),fig.width=5,fig.height=4.15,par=TRUE)
+# set everything to handlable numbers of digits (reclaim screen space!)
+options(replace.assign=TRUE,width=80,digits=2)
+#options(mar=c(5.1,4.1,1.1,2.1),cex=2,cex.text=2)
+source('R/preamble.R') # useful functions
+@ 
+
+
+\title[USMR~3]{How Statistics Work (1)}
+\subtitle{Univariate Statistics and Methodology using R}
+\author{Martin Corley}
+\date{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ----------------------------------
+
+\begin{document}
+
+\begin{frame}<handout:0>[plain]
+\begin{center}
+\Large please fill in a (very) quick survey at \\[4em]
+  \url{https://is.gd/rclass_survey}
+\end{center}
+
+\end{frame}
+
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+\begin{frame}[plain]
+\begin{center}
+\fbox{``people tend to automatically read words in front of them''}
+\spc
+\pause
+where does a general statement like this derive from?
+\end{center}
+
+\spc
+\begin{itemize}
+\item we need a way to \term{formulate} the \term{hypothesis} such
+  that it has\ldots{}
+\begin{itemize}
+\item a specific operationalisation of the question;
+\item a means of finding out what people do;
+\item criteria for determining whether the hypothesis is
+  \alert<3->{confirmed}
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Today}
+\tableofcontents
+\end{frame}
+
+\section[Hypotheses]{Generating Hypotheses}
+\subsection[Testability]{Hypotheses and Logic} %% EXPAND to 2 slides or more?
+
+\begin{frame}
+  \frametitle{Hypotheses and Logic}
+  \begin{itemize}
+  \item \term{hypotheses} are statements about possible states of affairs
+    \begin{itemize}
+    \item they can (in principle) be shown to be \R{TRUE} or \R{FALSE}
+\begin{itemize}
+    \item[\ra] they have to be \emph{falsifiable}
+    \end{itemize}
+  \end{itemize}
+    \spc\pause
+    
+  \item<bad@3-> bad things always come in threes
+  \item<bad@4-> you will meet a tall dark stranger
+  \item<bad@5-> people read words in front of them
+  \item<6-|good@7-> \only<8->{(relevantly literate)} people \emph{always automatically read} words in front of them
+\spc
+  \item<8-> how can we \emph{test} hypotheses?
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}<1>[label=wason]
+\frametitle{Abstract Hypotheses}
+
+\begin{center}
+\begin{tabular}{cccc}
+\only<1,3-5| handout:1>{\hyperlink{wason<2>}{\pgfimage[width=.2\linewidth]{img/card-e}}}%
+\only<2| handout:0>{\hyperlink{wason<1>}{\pgfimage[width=.2\linewidth]{img/card-b6}}} &
+\only<1,2,4,5| handout:1>{\hyperlink{wason<3>}{\pgfimage[width=.2\linewidth]{img/card-k}}}%
+\only<3| handout:0>{\hyperlink{wason<1>}{\pgfimage[width=.2\linewidth]{img/card-b6}}} &
+\only<1-3,5| handout:1>{\hyperlink{wason<4>}{\pgfimage[width=.2\linewidth]{img/card-4}}}%
+\only<4| handout:0>{\hyperlink{wason<1>}{\pgfimage[width=.2\linewidth]{img/card-ba}}} &
+\only<1-4| handout:1>{\hyperlink{wason<5>}{\pgfimage[width=.2\linewidth]{img/card-7}}}%
+\only<5| handout:0>{\hyperlink{wason<1>}{\pgfimage[width=.2\linewidth]{img/card-ba}}} \\
+~ & ~ & ~ & ~ \\
+\end{tabular}
+\end{center}
+\spc
+
+\textbf{if there is a vowel on one side of the
+    card, then there is an even number on the other side of the card.
+    Which cards do you \emph{need} to turn over to test this
+    rule?}\atright{(Wason, 1966)}
+
+\only<1-5| handout:0>{\atright{\hyperlink{cont}{\beamergotobutton{continue}}}}
+
+\end{frame}
+
+\begin{frame}[label=cont]
+  \frametitle{Hypotheses in the Real World}
+  \centeredimage{img/ek47rcpt}
+
+\begin{center}
+\textbf{if a receipt is over \$30 it must be approved by the
+  department manager}
+\end{center}
+\spc
+\begin{itemize}
+\item people are affected by the \emph{content} of hypotheses
+\item[\ra] the real world is contentful
+\end{itemize}
+\end{frame}
+
+\subsection[Probability]{Estimating Probability}
+
+\begin{frame}
+  \frametitle{No Smoke Without Fire}
+  \begin{columns}
+    \column{.6\linewidth}
+    \begin{center}
+      \textbf{if there's smoke, the volcano will erupt}
+    \end{center}
+    \spc
+    \begin{itemize}
+    \item<2-> (testability: timeframe, etc.)
+      \spc
+    \item<3-> in effect there's a \emph{probability} that the volcano
+      \begin{itemize}
+      \item logic is at the foundation of research (`the way the
+        world is')
+      \item probability is at the pragmatic end (`the way the world is
+        likely to be')
+      \end{itemize}
+
+      will erupt
+    \end{itemize}
+    \column{.35\linewidth}
+    \cimage{img/volcano.jpg}
+  \end{columns}
+\end{frame}
+
+%% Wason --> stamps/letters or other examples -->
+%% "the moment things become realistic, shades of grey --> probability
+%% "if there's smoke, the volcano will erupt" (NB., not testable
+%% without a timeframe, but probabilistic) --> slide with Pascal's
+%% Wager --> sampling
+
+
+\begin{frame}
+\frametitle{Everything has a Probability}
+\begin{itemize}
+\item probability of a volcano erupting
+\item probability of god existing
+  % \begin{itemize}
+  % \item \term{Pascal's Wager}
+  % \end{itemize}
+\end{itemize}
+\pause
+\begin{block}{Pascal's Wager}
+the real value of a lottery ticket can be calculated as
+\[\text{(probability of winning)} \times \text{(amount of prize)}\]
+(so, if $\it p(\text{winning}) = .01$ and the prize is \pounds{}100
+the value is $\it .01 \times \pounds{}100$, or \textbf{\pounds{}1}).
+\spc
+\pause
+\begin{tabular}{llll}
+\hline
+& \textbf{probability} & \textbf{prize} & \textbf{value} \\\hline
+god doesn't exist & very high & zero & nothing \\
+god exists & very small & eternal life & \uncover<4->{\alert{$\it >0$}} \\\hline
+\end{tabular}
+
+\end{block}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Estimating Probabilities can be Hard}
+\pgfdeclareimage[width=.05\linewidth]{dice1}{img/dice1}%
+\pgfdeclareimage[width=.05\linewidth]{dice2}{img/dice2}%
+\pgfdeclareimage[width=.05\linewidth]{dice3}{img/dice3}%
+\pgfdeclareimage[width=.05\linewidth]{dice4}{img/dice4}%
+
+\begin{itemize}
+\item $p(\text{volcano erupts}) =$ ``very small''\atright{\emph{other
+      factors}}
+\item $p(\text{god exists}) =$ ``\ldots''\atright{\emph{other
+      factors}}
+\end{itemize}
+\pause
+\spc
+\begin{itemize}
+  
+\item $p(\mathnormal{\raisebox{-.7ex}{\pgfuseimage{dice1}~%
+  \pgfuseimage{dice2}~%
+  \pgfuseimage{dice3}~%
+  \pgfuseimage{dice4}}}) =
+\frac{4}{6}\cdot\frac{3}{6}\cdot\frac{2}{6}\cdot\frac{1}{6}
+\simeq {\bf .019}$ \atright{\emph{chance}}
+\end{itemize}
+
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Recap}
+\begin{columns}
+  \column{.6\linewidth}
+  \begin{itemize}
+  \item hypotheses must be \emph{testable}
+  \item we can (only) test them by trying to \emph{negate} them
+  \item in the end, our assessment is going to be \emph{probabilistic}
+  \end{itemize}
+\spc
+\pause
+\begin{block}{A Happy Conflation}
+  \begin{itemize}
+  \item it's `easy' to estimate the probabilities of outcomes due to
+    chance
+  \item we can attempt to \emph{negate} the hypothesis that `chance
+    caused this'
+  \end{itemize}
+\end{block}
+  \column{.3\linewidth}
+  \cimage{img/popper.png}
+\end{columns}
+
+\end{frame}
+
+\section[Distributions]{Sampling and Distributions}
+\subsection[Sampling]{Samples and Populations}
+\begin{frame}[fragile]
+  \frametitle{What Does Chance Look Like?}
+<<dice>>=
+# throw two dice
+sum(sample(6,2,replace=TRUE))
+# throw two dice
+sum(sample(6,2,replace=TRUE))
+# throw two dice ten times
+replicate(10,sum(sample(6,2,T)))
+#
+# make a function
+#
+dice <- function(n) {
+    replicate(n,sum(sample(6,2,T)))
+    }
+dice(12)
+@ 
+
+
+\begin{itemize}
+\item a simple `dice simulator'
+\item if we `throw two dice' lots of times\ldots{}
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Dice Simulations}
+<<hist>>=
+hist(dice(100),breaks=seq(1.5,12.5))
+@ 
+  
+\cimage[.6\linewidth]{img/auto-hist-1}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Dice Simulations (Density)}
+<<hist2,eval=F>>=
+hist(dice(10000),breaks=seq(1.5,12.5))
+@ 
+<<hist3,echo=F>>=
+v <- dice(10000)
+hist(v,breaks=seq(1.5,12.5),freq=F,main='Histogram of dice(10000)')
+hist(v,breaks=c(1.5,2.5,3.5,6.5,7.5,8.5,9.5,10.5,11.5,12.5),col=c(NA,NA,'red',rep(NA,7)),main='Histogram of dice(10000)')
+@ 
+
+
+\cimage[.6\linewidth]{img/auto-hist3-1}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Histograms (Density)}
+  
+
+\cimage[.5\linewidth]{img/auto-hist3-2}  
+  \begin{itemize}
+  \item \emph{area} of rectangle represents probability of event
+  \item total area of graph sums to 1 (all possible events)
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Dice Simulations (Sample \ra{} Population)}
+<<hist4>>=
+hist(dice(100000),breaks=seq(1.5,12.5))
+@ 
+
+\cimage[.6\linewidth]{img/auto-hist4-1}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{The (Chance) Population}
+<<dice5,echo=F>>=
+hist(dice(100000),breaks=seq(1.5,12.5),freq=F,col=c('blue',rep(NA,5),'red',rep(NA,5)))
+@   
+\begin{columns}
+  \column{.5\linewidth}
+  \begin{itemize}
+  \item throwing \textcolor{blue}{2} is less likely than throwing
+    \textcolor{red}{8}
+  \item if we threw \textcolor{blue}{2} repeatedly, we would be surprised
+  \item[\ra] we would be \emph{less certain} that chance was governing
+    our dice throws
+  \end{itemize}
+  
+  \column{.45\linewidth}
+  \cimage{img/auto-dice5-1}
+\end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Towards Parametric Statistics}
+  \begin{itemize}
+  \item if only we had a way to estimate `chance' for human behaviours
+    \begin{itemize}
+    \item reaction times, exam scores, etc.
+    \end{itemize}
+\spc
+\pause
+    
+\item we do!
+  \end{itemize}
+\spc
+\begin{block}{Central Limit Theorem}
+  the means of random samples from a population tend to be
+    normally distributed about the population mean
+\end{block}
+  
+\end{frame}
+
+\section[Normal]{The Normal Distribution}
+\subsection[CLT]{Central Limit Theorem}
+\begin{frame}<0| handout:1>[fragile]
+  \frametitle{Central Limit Theorem}
+\begin{columns}
+  \column{.6\linewidth}
+<<cldemo>>=
+# demonstrating CLT:  We have 10000 `measurements'
+pool <- runif(n=10000, min=20, max=100)
+# we sample 24 measurements and take the mean
+mean(sample(pool,24))
+# we can do this loads of times
+v <- replicate(150, mean(sample(pool,24)))
+# what is our "distribution of means"?
+hist(v)
+# where is the real mean?
+abline(v=mean(pool),col='red',lwd=2)
+@   
+\column{.37\linewidth}
+\only<2->{\cimage{img/auto-cldemo-1}}
+\end{columns}
+\end{frame}
+
+%%%%%%%%%%%%%%%% could do live?
+
+\begin{frame}<1| handout:0>[plain]
+  \begin{center}
+    \Large Central Limit Theorem
+  \end{center}
+\end{frame}
+
+
+
+\begin{frame}\frametitle{The Normal Curve}
+\begin{overprint}
+\spc
+  \onslide<1| handout:0>
+\spc[4em]{\Large%
+\[y=\frac{1}{\sqrt{2\pi{{\sigma}^2}}}e^{-\left(\frac{(x-{\mu})^2}{2{\sigma}^2}\right)}\]}
+\onslide<2-| handout:1>
+\cimage[.7\linewidth]{img/emptynormal}
+
+\begin{itemize}
+\item area under curve $= 1$ (sum of all probabilities)
+\item curve is \term{asymptotic} to zero at either end
+\end{itemize}
+\end{overprint}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{CLT and the Normal Curve}
+\begin{itemize}
+\item quite often, \emph{data} is normally distributed
+
+\end{itemize}
+
+<<sheets,echo=F,results='hide',message=F>>=
+require('googlesheets')
+t <- gs_title("RSurvey1")
+heights <- gs_read(t)
+names(heights) <- c('gender','HEIGHT','submitted','Token')
+heights$gender <- as.factor(heights$gender)
+heights <- heights[heights$HEIGHT > 70,]
+heights <- heights[complete.cases(heights),]
+## fix for building lecture
+if (length(heights$gender) < 5) {
+    heights <- data.frame(gender=rbinom(150,1,prob=c(.7,.3)))
+    heights$gender <- factor(heights$gender,labels=c('Female','Male'))
+    heights$HEIGHT <- rnorm(150,162,15)
+    men <- rnorm(150,175,15)
+    heights$HEIGHT[heights$gender=='Male'] <- men[heights$gender=='Male']
+    heights$HEIGHT <- round(heights$HEIGHT,0)
+}
+write.csv(heights,row.names=F,file='R/auto-heights.csv')      
+@ 
+
+<<heights>>=
+hist(heights$HEIGHT,main='Survey Height Data',xlab='height (cm)',freq=F)
+@ 
+\cimage[.6\linewidth]{img/auto-heights-1}
+
+\end{frame}
+
+\subsection[Data]{Approximately Normal Data}
+
+\begin{frame}[fragile]
+  \frametitle{Height Distribution}
+
+<<heights2b,eval=F>>=
+plot(density(heights$HEIGHT),main='Survey Height Data',xlab='height (cm)')
+@ 
+
+<<heights2,echo=F,results='hide'>>=
+mu = mean(heights$HEIGHT)
+sg = sd(heights$HEIGHT)
+plot(density(heights$HEIGHT),main='Survey Height Data',xlab='height (cm)',ylim=c(0,max(c(dnorm(mu,mu,sg),max(density(heights$HEIGHT)$y)))))
+@ 
+
+<<heights3,echo=F,results='hide'>>=
+plot(density(heights$HEIGHT),main='Survey Height Data',xlab='height (cm)',ylim=c(0,max(c(dnorm(mu,mu,sg),max(density(heights$HEIGHT)$y)))))
+x <- seq(min(heights$HEIGHT),max(heights$HEIGHT),length.out=49)
+lines(x,dnorm(x,mu,sg),col='red',lty=2,lwd=4)
+@ 
+
+\begin{overprint}
+  \onslide<1| handout:0>
+\cimage[.7\linewidth]{img/auto-heights2-1}
+\onslide<2| handout:1>
+\cimage[.7\linewidth]{img/auto-heights3-1}
+\end{overprint}
+
+\end{frame}
+
+\begin{frame}\frametitle{Distribution Characteristics}
+\begin{itemize}
+\item if we're lucky, the frequency distribution of interval or
+  ratio data can be
+  \emph{approximated} using the normal distribution
+\item note that this isn't (a direct application of) Central Limit
+  Theorem
+  \spc\pause
+\item but if our data approximates the normal distribution, we can
+  \emph{estimate} the distribution of the population of sample means
+
+\end{itemize}
+
+\end{frame}
+
+\subsection[SD]{Standard Deviation}
+
+\begin{frame}\frametitle{Standard Deviation}
+\begin{itemize}
+\item in order to approximate the distribution we need a \emph{measure
+    of spread}---some indication of how much the data varies about the
+  mean
+\item \term{standard deviation} gives us exactly this information
+\[ \sigma = \sqrt{\frac{\sum{(x-\mu)^2}}{n-1}} \]
+
+where \term{$\sigma$} is the standard deviation, \term{$\mu$} is the mean, and \term{$n$} is the number of datapoints.
+\pause[2]
+\item calculates ``average difference from mean''
+\pause[3]
+\item why are the differences \emph{squared}?
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}\frametitle{The Normal Curve Revisited}
+\vspace*{2em}
+
+
+\cteximage[.7\linewidth]{img/normal-nd.pdftex_t}
+
+
+
+\begin{itemize}
+\item the mean and the standard deviation define
+  the \emph{centre} of the normal curve, and what its \emph{width} is
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Height Data}
+<<normal,echo=F,results='hide'>>=
+plot(density(heights$HEIGHT),main='Survey Height Data',xlab='height (cm)',ylim=c(0,max(c(dnorm(mu,mu,sg),max(density(heights$HEIGHT)$y)))))
+lines(x,dnorm(x,mu,sg),col='red',lty=2,lwd=4)
+abline(v=mu,lty=2,lwd=2,col='blue')
+lines(c(mu,mu+sg),c(dnorm(mu+sg,mu,sg),dnorm(mu+sg,mu,sg)),lty=2,lwd=2,col='blue')
+th <- max(c(dnorm(mu,mu,sg),max(density(heights$HEIGHT)$y)))
+#text(mu+(sg/8),th/8,bquote(mu == .(round(mu,2))),col='blue',adj=0)
+#text(mu+sg*1.25,dnorm(mu+sg,mu,sg),bquote(sigma == .(round(sg,3))),col='blue',adj=0)
+# doesn't work in pdflatex
+@   
+
+\cimage[.5\linewidth]{img/auto-normal-1}
+\begin{itemize}
+\item[$\mu$] = \Sexpr{.rround(mu,2)}
+\item[$\sigma$] = \Sexpr{.rround(sg,3)}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Normal Data}
+  \begin{itemize}
+  \item we have (approximately) normally-distributed data
+  \item by assumption, our data comes from a population like this
+  \end{itemize}
+
+<<population,echo=F,results='hide'>>=
+x <- seq(mu-3.5*sg,mu+3.5*sg,length.out=53)
+plot(x,dnorm(x,mu,sg),type='l',lwd=4,col='red',ylab='Density',xlab='height (cm)')
+@ 
+
+\cimage[.5\linewidth]{img/auto-population-1}
+\end{frame}
+
+
+
+
+\begin{frame}
+  \frametitle{Probability}
+<<population2,echo=F,results='hide'>>=
+x <- seq(mu-3.5*sg,mu+3.5*sg,length.out=53)
+plot(x,dnorm(x,mu,sg),type='n',ylab='Density',xlab='height (cm)')
+polygon(c(x[6:16],x[16],x[6]),c(dnorm(x[6:16],mu,sg),0,0),col='pink',lty=0)
+lines(x,dnorm(x,mu,sg),type='l',lwd=4,col='red')
+@ 
+\cimage[.5\linewidth]{img/auto-population2-1}
+\begin{itemize}
+\item normal curve is a density plot
+\item probability is represented by \emph{area}
+\item probability of being between \Sexpr{.rround(x[6],1)} and
+  \Sexpr{.rround(x[16],1)}~cm tall is \textbf{\Sexpr{.rround(pnorm(x[16],mu,sg)-pnorm(x[6],mu,sg),3)}}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}\frametitle{The Standard Normal Curve}
+\begin{itemize}
+\item we can make things simpler by \emph{specifying} the values of
+  $\mu$ and $\sigma$
+\end{itemize}
+\cteximage[.6\linewidth]{img/normal-marked.pdftex_t}
+
+\pause
+\begin{itemize}
+\item can convert datapoints from \emph{any} normal curve to the standard curve
+  using \term{z-scores}
+\end{itemize}
+\end{frame}
+
+
+
+
+\begin{frame}\frametitle{Z-Scores}
+\begin{center}
+\begin{tabular}{r|r|r|r|r}
+\hline
+$x$ & $\mu$ & $x-\mu$ & $\sigma$ & $z = (x-\mu)/\sigma$ \\\hline
+ \Sexpr{.rround(x[6],1)} & \Sexpr{.rround(mu,1)} & \uncover<2->{\Sexpr{.rround(x[6]-mu,1)}} & \Sexpr{.rround(sg,1)} & \uncover<3->{\textbf{\Sexpr{.rround((x[6]-mu)/sg,1)}}} \\
+\Sexpr{.rround(x[45],1)}  & \Sexpr{.rround(mu,1)} & \uncover<2->{\Sexpr{.rround(x[45]-mu,1)}} & \Sexpr{.rround(sg,1)} & \uncover<3->{\textbf{\Sexpr{.rround((x[45]-mu)/sg,1)}}} \\
+ \Sexpr{.rround(x[24],1)} &  \Sexpr{.rround(mu,1)} & \uncover<2->{\Sexpr{.rround(x[24]-mu,1)}} & \Sexpr{.rround(sg,1)} & \uncover<3->{\textbf{\Sexpr{.rround((x[24]-mu)/sg,1)}}} \\\hline
+\end{tabular}
+\end{center}
+\begin{itemize}
+\item \emph{numbers of standard deviations from the mean}
+\pause[2]
+\begin{itemize}
+\item subtract the mean \uncover<3->{and divide by the
+    sd}
+\end{itemize}
+\item<4-> notionally, Z-scores closer to zero are more probable
+\item<4-> (though note exact probability calculations require a \emph{range} of values)
+  \spc
+  
+\item<4-> $t$ values are basically Z-scores\ldots
+\end{itemize}
+\end{frame}
+
+\subsection[SE]{Standard Error}
+
+\begin{frame}
+  \frametitle{Central Limit Theorem again}
+  \begin{itemize}
+  \item `the population of sample means tends to the normal distribution'
+  \item given a sample with a hypothetical population distribution\ldots
+  \end{itemize}
+\begin{overprint}
+  \onslide<1| handout:0>
+  \cimage[.6\linewidth]{img/auto-heights3-1}
+  \onslide<2| handout:0>
+  \cimage[.6\linewidth]{img/auto-population-1}
+   \onslide<3| handout:1>
+\spc[4em]
+   \begin{itemize}
+\item \ldots{}we can estimate the distribution of means using
+  \term{standard error}
+\item an \emph{estimate} of the (standard deviation of the) normal distribution of sample means
+\end{itemize}
+\spc
+\[ \textnormal{SE} = \frac{\sigma}{\sqrt{n}} \]
+\end{overprint}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Standard Error}
+\begin{columns}
+  \column{.35\linewidth}
+  \begin{itemize}
+  \item $\sigma = \Sexpr{sg}$
+  \item $n$ = \Sexpr{length(heights$gender)}
+  \item $\textnormal{SE} =
+    \frac{\Sexpr{sg}}{\sqrt{\Sexpr{length(heights$gender)}}}
+    = \Sexpr{sg/sqrt(length(heights$gender))}$
+  \end{itemize}
+  \column{.6\linewidth}
+<<sdse,echo=F,results='hide'>>=
+oldpar=par()
+par(mfrow=c(1,2))
+x <- seq(mu-3.5*sg,mu+3.5*sg,length.out=53)
+plot(x,dnorm(x,mu,sg),type='l',lwd=4,col='red',ylab='Density',xlab='height (cm)')
+se <- sg/sqrt(length(heights$gender))
+x2 <- seq(mu-3.5*sg,mu+3.5*sg,length.out=153)
+plot(x2,dnorm(x2,mu,se),type='l',lwd=4,col='blue',ylab='Density',xlab='mean height (cm)')
+par(mfrow=c(1,1))
+@ 
+\cimage{img/auto-sdse-1}  
+\end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Sample Means and Standard Error}
+<<newx2,echo=F,results='hide'>>=
+x2<-seq(mu-3.5*se,mu+3.5*se,length.out=153)
+@ 
+  \begin{columns}
+  \column{.4\linewidth}
+  \begin{itemize}
+  \item we can use the normal curve specified by \emph{standard error}
+    to estimate the likelihood of getting a \emph{sample mean}
+  \item if the probability is low, the sample isn't very likely to
+    come from the same population
+\item $p=\Sexpr{pnorm(x2[46],mu,se)-pnorm(x2[26],mu,se)}$
+  \end{itemize}
+  \column{.55\linewidth}
+<<lastone,echo=F,results='hide'>>=
+plot(x2,dnorm(x2,mu,se),xlab='mean height (cm)',ylab='Density',type='n')
+polygon(c(x2[26:46],x2[46],x2[26]),c(dnorm(x2[26:46],mu,se),0,0),col='lightblue',lty=0)
+lines(x2,dnorm(x2,mu,se),col='blue',lwd=4)
+@ 
+\cimage{img/auto-lastone-1}
+\end{columns}
+\end{frame}
+
+\begin{frame}[plain]
+\spc[4em]
+\Large
+we have height data from (at least) two populations\ldots{}
+  
+\end{frame}
+
+
+\appendix
+\againframe<2-5| handout:0>{wason}
+
+\end{document}
+
+
+\end{document}
