@@ -4,6 +4,7 @@
 \setbeamertemplate{navigation symbols}{}
 \usepackage{luebeck-numbers}
 
+
 \usepackage{nbeamer}
 \usepackage{centeredimage}
 \usepackage{lmodern}
@@ -54,14 +55,14 @@ source('R/preamble.R') # useful functions
 \titlepage
 \end{frame}
 
- \begin{frame}<1| handout:0>{Pick A Card\ldots}
- \cimage[.75\linewidth]{img/cards1}
- \end{frame}
+ %% \begin{frame}<1| handout:0>{Pick A Card\ldots}
+ %% \cimage[.75\linewidth]{img/cards1}
+ %% \end{frame}
 
 \begin{frame}{The R Team}
-  \begin{block}{Course Leaders}
+  \begin{block}{Course Leader}
     Martin Corley, Room G8, 7GS \atright{\url{Martin.Corley@ed.ac.uk}}\\
-    Milan Val\'{a}\v{s}ek, Room G9, 7GS \atright{\url{Milan.Valasek@ed.ac.uk}}
+    %Milan Val\'{a}\v{s}ek, Room G9, 7GS \atright{\url{Milan.Valasek@ed.ac.uk}}
   \end{block}
   \begin{alertblock}{Teaching Fellows}
     Milan Val\'{a}\v{s}ek, Room G9, 7GS \atright{\url{Milan.Valasek@ed.ac.uk}}\\    
@@ -70,12 +71,12 @@ source('R/preamble.R') # useful functions
 %  \spc
   \begin{block}{Tutor Team}
 \begin{tabular}{p{.4\linewidth}p{.4\linewidth}}
-Amrita Ahuwalia &  Andres Karjus \\
-Karim Rivera Lares & Lydia Speyer \\
-Marios Theocharopoulos & Nikolas Theodoropoulos \\
+Amrita Ahluwalia &  Luca Bevacqua \\
+Karim Rivera Lares & Andres Karjus \\
+Lydia Speyer & Marios Theocharopoulos \\
+Nikolas Theodoropoulos & Anita Tobar\\
 \end{tabular}  
 \end{block}
-\atright{\pgfimage[width=.25\linewidth]{img/a-team-van.jpg}}
 \end{frame}
 
  
@@ -116,7 +117,7 @@ Marios Theocharopoulos & Nikolas Theodoropoulos \\
   \frametitle{If You Get Ahead}
   \begin{itemize}
   \item additional readings on Learn
-  \item optional homeworks and solutions
+  \item talk to the course team
   \end{itemize}
   
 \end{frame}
@@ -341,6 +342,19 @@ wordcloud(pp, scale=c(5,0.5), max.words=150, random.order=FALSE, rot.per=0.35,
   
 \end{frame}
 
+\begin{frame}[fragile]
+  \frametitle{A Huge Community}
+  \begin{itemize}
+  \item if it's use\emph{less}, chances are someone has already done
+    it too
+  \end{itemize}
+<<cowsay>>=
+library(cowsay)
+say('Hello USMR',by='owl')
+@   
+
+\end{frame}
+
 \subsection[R~Justification]{Why Use R?}
 \begin{frame}{Why Use R?}
   \begin{itemize}
@@ -388,6 +402,8 @@ wordcloud(pp, scale=c(5,0.5), max.words=150, random.order=FALSE, rot.per=0.35,
     so we could use SPSS (or STATA, or SAS)\spc
   \item but \R{R} helps you \emph{understand} your data (not just get
     a $p$-value)
+    \spc
+  \item<2-> rest of today:  A (gentle!) intro to \R{R}
   \end{itemize}
 
   % R is very powerful---do you need that power?  Yes you do (to
@@ -397,6 +413,365 @@ wordcloud(pp, scale=c(5,0.5), max.words=150, random.order=FALSE, rot.per=0.35,
   % R isn't always easy to learn but...
   
 \end{frame}    
+
+
+\section[R Starter]{R Basics}
+
+\begin{frame}
+  \frametitle{Assumption}
+  \begin{itemize}
+  \item you've managed to install \R{R} and \R{RStudio}
+    \spc
+    \item problems? Talk to us in the labs 
+    \end{itemize}
+\end{frame}
+
+\subsection[R Data]{R and Data}
+\begin{frame}
+  \frametitle{Data, Types of Data}
+  \begin{itemize}
+  \item \R{R} is (primarily) designed for handling \emph{quantitative} data
+  \end{itemize}
+  \pause
+  
+ \begin{columns}
+   \column{.6\linewidth}
+   \onslide<6->{\atright{RATIO}}  
+   \begin{itemize}
+   \item<3-> \emph{numbers} (pupil size)?\onslide<6->{\atright{INTERVAL}}
+   \item<4-> \emph{orders} (attractiveness)?\onslide<6->{\atright{ORDINAL}}
+   \item<5-> \emph{categories} (eye colour?)\onslide<6->{\atright{NOMINAL}}
+   \end{itemize}
+  \column{.25\linewidth}
+  \begin{overprint}
+    \onslide<2-3| handout:1>
+  \cimage{img/eyes_S.png}
+  \onslide<4| handout:0>
+  \cimage{img/eyes_b.png}
+  \onslide<5-| handout:0>
+  \cimage{img/ming2_sp.jpg}
+\end{overprint}
+\end{columns}
+\spc
+\begin{itemize}
+\item<7-> plus, arbitrary information (``strings'') 
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Data in R}
+  \begin{itemize}
+  \item you can type data directly in to r
+  \end{itemize}
+<<data>>=
+# a number
+1.2
+# a string
+'abc'
+@   
+
+\begin{itemize}
+\item and you can do \term{operations} on data
+\end{itemize}
+<<data2>>=
+1.2 + 7 * 2
+@ 
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Variables}
+\begin{columns}
+  \column{.6\linewidth}
+  \begin{itemize}
+  \item you can assign data to \textbf{variables}\ldots
+  \end{itemize}
+<<var>>=
+pupilsize <- 2.3 # in mm
+attractiveness <- 3 # out of 7
+eyecolour <- 'blue' # a string
+@ 
+\begin{itemize}
+\item \ldots{}and use those variables
+\end{itemize}
+<<var2>>=
+pupilsize * 2
+attractiveness -1
+@ 
+\pause
+\begin{itemize}
+\item NB., spelling/capitalization matter
+\end{itemize}
+<<varx>>=
+PupilSize *2
+attactiveness - 1
+@ 
+\column{.25\linewidth}
+  \cimage{img/ming2_sp.jpg}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Vectors, Lists}
+  \begin{columns}
+    \column{.6\linewidth}
+    \begin{itemize}
+    \item statistics is about \term{groups} of things
+    \end{itemize}
+\pause[3]
+<<vectors>>=
+# vectors of numbers
+alleyes <- c(2.3,3.1,1.7)
+# vector maths
+alleyes + 3
+@ 
+\begin{itemize}
+\item sometimes those things can be arbitrary
+\end{itemize}
+<<lists,tidy.opts=list(widt.cutoff=55)>>=
+shane <- list(pupilsize=1.7,
+              eyecolour='murky')
+shane
+# access one element
+shane$pupilsize
+@     
+    \column{.25\linewidth}
+    \begin{overprint}
+      \onslide<1| handout:1>
+      \cimage{img/2face.png}
+      \onslide<2-| handout:0>
+      \cimage{img/3face.png}
+    \end{overprint}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Nominal data: Factors}
+  \begin{itemize}
+  \item \emph{strings} can be anything
+  \item \term{categories} (nominal data) are from a limited set
+    \begin{itemize}
+    \item called \term{factors} in \R{R}
+    \end{itemize}
+  \end{itemize}
+<<factors>>=
+# vectors of strings
+eyes <- c('blue','brown','hazel','blue')
+eyesF <- as.factor(eyes)
+# strings
+eyes
+# factor
+eyesF
+# string
+eyes <- c(eyes,'murky')
+eyes
+# factor
+eyesF <- c(eyesF,'murky') # this will go weird because there is no "murky"
+eyesF
+@ 
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Everything we know}
+\begin{block}{Data Types}
+  \begin{tabular}{lll}
+    NOMINAL & \R{factor} & \R{x <- as.factor(<strings>)} \\
+    ORDINAL & \R{number} & \R{x <- <number>} \\
+    INTERVAL & \R{number} & \R{x <- <number>} \\
+    RATIO & \R{number} & \R{x <- <number>} \\
+  \end{tabular}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Dataframes}
+\begin{itemize}
+\item data can be grouped into a \term{dataframe}
+  \begin{itemize}
+  \item each \emph{line} represents one set of observations
+  \item each \emph{column} represents one type of information
+  \item like a spreadsheet
+  \end{itemize}
+\end{itemize}
+<<df1,echo=FALSE>>=
+mugshots <- data.frame(name=c('shane','bob','belinda'),eyes=c('blue','blue','hazel'),pupil=c(1.2,2.2,2.3),attractiveness=c(2,4,6))
+mugshots$name<-as.character(mugshots$name)
+@ 
+<<df2>>=
+mugshots
+# note: 'name' is different from 'pupil'
+summary(mugshots)
+@ 
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Functions}
+<<sum2>>=
+summary(mugshots)
+@ 
+  \begin{itemize}
+  \item \R{summary()} is a \term{function}
+    
+  \item it takes an \term{argument} \R{mugshots} and does something
+    with it
+    \begin{itemize}
+    \item (here, prints out a summary)
+    \end{itemize}
+\spc
+\pause
+    \item here's another function:
+    \end{itemize}
+<<runif>>=
+runif(20,0,10)
+# or put it somewhere useful
+v <- runif(20,0,10)
+@ 
+\pause
+\begin{itemize}
+\item `generate 20 random numbers between 0 and 10'
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Enough to do something with}
+  \begin{block}{What we know}
+    \begin{itemize}
+    \item basic data types in \R{R}
+    \item vectors and lists
+    \item what variables are
+    \item what functions are
+    \end{itemize}
+  \end{block}
+\spc
+  \begin{itemize}
+  \item in a minute, we're going to take some of what we know and put
+    it together
+  \item but first, we have to know \emph{how} to `instruct' \R{R}
+  \end{itemize}
+  
+\end{frame}
+
+\subsection[RStudio]{Up and Running}
+\begin{frame}
+  \frametitle{RStudio}
+\begin{overprint}
+\onslide<1| handout:0>
+\cimage{img/rstudio_0.png}
+\onslide<2| handout:1>
+\cimage{img/rstudio_0b.png}
+\end{overprint}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Projects}
+  \begin{columns}
+    \column{.6\linewidth}
+    \begin{itemize}
+    \item \R{RStudio} helps you organize your \R{R} life into \emph{projects}
+      
+    \item each project is a collection of data and \R{R} scripts that
+      live in a folder (or \emph{directory})
+    \item easy to switch between projects
+    \item \emph{always} start a new project for a new piece of work
+      (e.g., lab)
+    \end{itemize}
+    \column{.3\linewidth}
+    \cimage{img/project.png}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Files (Scripts)}
+  \begin{columns}
+    \column{.3\linewidth}
+    \cimage{img/rs_file.png}
+    \column{.6\linewidth}
+    \begin{itemize}
+    \item by far the easiest way to start with \R{R} is to create
+      \emph{scripts}
+    \item by convention, these have filenames ending \R{.R}
+    \item they can include the code you're running, comments, etc.
+      \begin{itemize}
+      \item important for \emph{reproducibility}
+      \end{itemize}
+    \item \emph{always} work from a script in each project
+      
+      \spc\pause
+      \item more sophisticated approaches combine typesetting with
+        \R{R}
+        \begin{itemize}
+        \item for example, \R{RMarkdown}
+        \end{itemize}
+
+
+    \end{itemize}
+  \end{columns}
+\end{frame}
+
+
+
+\begin{frame}\frametitle{RStudio panels}
+\begin{overprint}
+\onslide<1| handout:0>
+  \cimage{img/rstudio_E.png}
+\onslide<2| handout:0>
+\cimage{img/rstudio_C.png}
+\onslide<3| handout:1>
+\cimage{img/rstudio_U.png}
+\onslide<4| handout:0>
+\cimage{img/rstudio_env.png}
+\onslide<5| handout:0>
+\cimage{img/rstudio_fil.png}
+\end{overprint}
+
+\end{frame}
+
+
+\begin{frame}[plain]
+  \centering\Huge{RStudio Live}
+  
+\end{frame}
+
+\begin{frame}[plain]
+  
+\cimage[.9\linewidth]{img/correlation}
+\spc
+\ars{www.xkcd.com}
+
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{Fix your problems now}
+\begin{columns}
+  \column{.5\linewidth}
+  \begin{itemize}
+  \item \R{RStudio} ``remembers where you were'' in each project
+  \item this is not always a good thing
+    \spc
+  \item<alert@1-> problem-solving fix:
+    \begin{itemize}
+    \item tools \ra{} global options \ra{}
+    \end{itemize}
+\spc
+\item<2-> also worth playing with \emph{Appearance}
+  \end{itemize}
+  \column{.4\linewidth}
+  \cimage{img/Rdata_never.png}
+\end{columns}
+\end{frame}
+
+
+
+
+\end{document}
+
+
+%%% final?
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section[Example]{A Toy Experiment}
 
@@ -821,13 +1196,6 @@ so far, we've only talked about items with changes\ldots{}
     \end{itemize}      
   \end{frame}
   
-\begin{frame}[plain]
-  
-\cimage[.9\linewidth]{img/correlation}
-\spc
-\ars{www.xkcd.com}
-
-\end{frame}
 
 \begin{frame}{Reasoning About Findings}      
 \begin{itemize}
