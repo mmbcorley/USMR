@@ -1,0 +1,725 @@
+\documentclass[compress,11pt,aspectratio=1610]{beamer}
+\usetheme{Luebeck}
+\usecolortheme{crane}
+\setbeamertemplate{navigation symbols}{}
+\usepackage{luebeck-numbers}
+
+% new new data
+
+\usepackage{nbeamer}
+\usepackage{centeredimage}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
+\usepackage{colortbl}
+\usepackage{url}
+\urlstyle{same}
+\newcommand*{\ars}[1]{\atright{\mbox{\tiny #1}}\\}
+\renewcommand{\term}[1]{\textbf{\usebeamercolor[fg]{titlelike}{#1}}}
+\newcommand*{\spc}[1][1em]{\vspace*{#1}\par}
+\usepackage{xspace}
+\renewenvironment{knitrout}{\setlength{\topsep}{0mm}}{}
+\newcommand{\R}[1]{\colorbox{shadecolor}{\texttt{\hlstd{\small #1}}}} % R code, requires knitr defs
+\newcommand*{\Resize}[2]{\resizebox{#1}{!}{$#2$}}%
+
+<<setup, include=FALSE>>=
+require(knitr)
+# this bit makes the tildes lower
+.hook_source = knit_hooks$get('source')
+knit_hooks$set(source = function(x, options) {
+  txt = .hook_source(x, options)
+  # extend the default source hook
+  gsub('~', '\\\\textasciitilde', txt)
+})
+#
+knit_hooks$set(par=function(before, options, envir){
+if (before && options$fig.show!='none') par(mar=c(5.1,4.1,2.1,2.1))
+}, crop=hook_pdfcrop)
+#
+opts_chunk$set(fig.path='img/auto-',fig.align='center',fig.show='hide',size='scriptsize',warning=FALSE,tidy=TRUE,tidy.opts=list(keep.blank.line=FALSE, width.cutoff=80),fig.width=5,fig.height=4.15,par=TRUE)
+# set everything to handlable numbers of digits (reclaim screen space!)
+options(replace.assign=TRUE,width=80,digits=2)
+#options(mar=c(5.1,4.1,1.1,2.1),cex=2,cex.text=2)
+source('R/preamble.R') # useful functions
+@ 
+
+
+\title[USMR~5]{Categorical/R}
+\subtitle{Univariate Statistics and Methodology using R}
+\author{Martin Corley}
+\date{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ----------------------------------
+
+\begin{document}
+
+\begin{frame}<handout:0>[plain]
+\begin{center}
+\Large please fill in another trivial survey at \\[4em]
+  \url{https://is.gd/rclass_survey2}
+\end{center}
+
+\end{frame}
+
+
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+\begin{frame}
+  \frametitle{To Date}
+  \begin{itemize}
+  \item<alert@2> Central Limit Theorem
+    \begin{itemize}
+    \item sample estimates of population mean will be normally distributed
+      about the true mean
+    \end{itemize}
+  \item The Normal Distribution
+    \begin{itemize}
+    \item Standard Deviation
+    \item<alert@2> Standard Error\footnote{the Standard Deviation of the
+      Normal curve which represents the distribution of sample means}
+    \end{itemize}
+    \pause[3]
+  \item<alert@4-> $z$ scores and the $z$ test
+  \item Degrees of Freedom
+  \item<alert@3-> $t$ scores and the $t$ test 
+  \end{itemize}
+\spc
+\pause[4]
+\begin{center}
+\fbox{mean difference over standard error of the mean difference}  
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Today}
+\tableofcontents
+\end{frame}
+
+\section[Categorical]{Categorical Data}
+
+\begin{frame}
+  \frametitle{General Principles of NHST}
+  
+  \begin{itemize}
+  \item given some observation $x$:
+    \begin{itemize}
+    \item create null hypothesis (H$_{\text{0}}$)
+      \begin{itemize}
+      \item the pattern observed is due to chance
+      \end{itemize}
+    \item calculate probability of $x$ given H$_{\text{0}}$
+    \item if probability is less than some criterion ($\alpha$):
+      \begin{itemize}
+      \item reject H$_{\text{0}}$
+      \item by implication, accept H$_{\text{1}}$
+        
+      \item argue for `cause' of observed effect
+       
+        
+      \end{itemize}
+
+    \end{itemize}
+
+  \end{itemize}
+\end{frame}
+
+\subsection[Binomial]{Binomial Test}
+
+\begin{frame}
+  \frametitle{Binomial Test}
+  \begin{columns}
+    \column{.3\linewidth}
+    \cimage{img/50p_ht}
+    \pause
+
+    \begin{center}
+\tiny
+      \begin{tabular}{ccccc}
+  T & T & T & T & T\\
+  \textcolor{red}{H} & T & T & T & T\\
+  \textcolor{red}{H} & \textcolor{red}{H} & T & T & T\\
+  \textcolor{red}{H} & T & \textcolor{red}{H} & T & T\\
+  \textcolor{red}{H} & T & T & \textcolor{red}{H} & T\\
+  \textcolor{red}{H} & T & T & T & \textcolor{red}{H}\\
+  T & \textcolor{red}{H} & T & T & T\\
+  T & \textcolor{red}{H} & \textcolor{red}{H} & T & T\\
+  T & \textcolor{red}{H} & T & \textcolor{red}{H} & T\\
+  T & \textcolor{red}{H} & T & T & \textcolor{red}{H}\\
+  T & T & \textcolor{red}{H} & T & T\\
+  T & T & \textcolor{red}{H} & \textcolor{red}{H} & T\\
+  T & T & \textcolor{red}{H} & T & \textcolor{red}{H}\\
+  T & T & T & \textcolor{red}{H} & T\\
+  T & T & T & \textcolor{red}{H} & \textcolor{red}{H}\\
+  T & T & T & T & \textcolor{red}{H}\\
+\end{tabular}
+\end{center}
+\column{.68\linewidth}
+  \begin{itemize}
+  \item<1-> what's the probability of getting 2 heads or fewer in 5~tosses?
+    \pause[2]
+  \item $2^{5} = 32$ possible sequences
+  \item 16 include $\le 2$ heads
+    \item $p = 16/32 = .5$
+  \end{itemize}
+\end{columns}  
+
+  \end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Binomial Test}
+<<binomt>>=
+binom.test(2,5,.5,alternative='less')
+@ 
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Eye Colour}
+<<sheets,echo=F,results='hide',message=F>>=
+require('googlesheets')
+t <- gs_title("RSurvey2")
+eyes <- gs_read(t)
+eyes <- eyes[,1:3]
+names(eyes) <- c('gender','department','eyecol')
+if (length(eyes$gender) < 10) {
+    eyes <- data.frame(gender=sample(c("Male","Female","Other"),100,replace=T,prob=c(.75,.20,.05)),
+                       department=sample(c("Linguistics","Psychology","Other"),100,replace=T,prob=c(.4,.58,.02)),
+                       eyecol=sample(c("Blue","Brown","Hazel","Green","Amber","Other"),100,replace=T,prob=c(.7,.8,.05,.05,.04,.01))
+                       )
+}
+write.csv(eyes,row.names=F,file='R/auto-eyes.csv')
+
+# convenience function
+sayp <- function(p) {
+    ifelse(p<=.05,'significantly more','the same')
+    }
+@ 
+  
+\begin{itemize}
+\item approximately \textbf{9\%} of the world population have blue eyes
+\end{itemize}
+
+<<eyes>>=
+# a simple way of producing a table
+table(eyes$eyecol)
+# we need to store some values
+blue <- sum(eyes$eyecol == 'Blue')
+total <- length(eyes$eyecol)
+@  
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Eye Colour (2)}
+
+<<doit>>=
+blue
+total
+@  
+<<doit1,eval=F>>=
+# with these numbers, we can run a binomial test
+binom.test(blue, total, .09, alternative = 'greater')
+@ 
+
+<<doit2,echo=F>>=
+.pp(binom.test(blue, total, .09, alternative = 'greater'),l=list(1:6,0))
+@ 
+
+\begin{itemize}
+\item members of this class have
+  \term{\Sexpr{sayp(binom.test(blue,total,.09,alternative='g')$p.value)}}
+  likelihood of having blue eyes compared to the world population
+\end{itemize}
+\atright{\hyperlink{cont}{\beamerskipbutton{skip digression}}}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Digression: `Interactive' Slides}
+
+<<sheetsdemo,eval=F>>=
+require('googlesheets')
+t <- gs_title("RSurvey2")
+eyes <- gs_read(t)
+eyes <- eyes[,1:3]
+names(eyes) <- c('gender','department','eyecol')
+
+# record for later
+write.csv(eyes,row.names=F,file='R/auto-eyes.csv')
+
+# convenience function
+sayp <- function(p) {
+    ifelse(p<=.05,'significantly less','the same')
+    }
+                                        
+@  
+
+<<sayitdemo>>=
+# ...later...
+sayp(binom.test(blue,total,.09,alternative='greater')$p.value)
+    
+@ 
+  
+  
+\end{frame}
+  
+\subsection[Fisher]{Fisher's Exact Test}
+
+\begin{frame}[plain]
+\cimage[.5\linewidth]{img/milk_tea}
+  
+\end{frame}
+
+\begin{frame}[label=cont]
+  \frametitle{The Birth of NHST}
+\begin{columns}
+  \column{.2\linewidth}
+  \cimage{img/muriel_bristol}
+  \column{.79\linewidth}
+  \begin{center}
+    Muriel Bristol
+  \end{center}
+  \begin{itemize}
+  \item claimed she could tell milk-first from tea-first
+  \end{itemize}
+\end{columns}
+\begin{columns}
+  \column{.79\linewidth}
+  \begin{center}
+    Ronald Fisher
+  \end{center}
+  \begin{itemize}
+  \item devised the notion of null hypothesis (H$_{\text{0}}$)
+\begin{itemize}
+  \item NB., alternative (`experimental') hypothesis due to Neyman \& Pearson
+  \end{itemize}
+\item assume \emph{chance} governs Muriel's judgements\ldots
+\end{itemize}
+  
+  \column{.2\linewidth}
+  \cimage{img/ronald_fisher}
+\end{columns}
+  
+
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Eight Cups of Tea}
+\begin{columns}
+  \column{.4\linewidth}
+  \cimage[.7\linewidth]{img/eight_tea}
+  \column{.58\linewidth}
+  \begin{itemize}
+  \item eight cups of tea, 4~milk-first, 4~tea-first
+    
+  \item Muriel~Bristol asked to identify the four milk-first cups
+  \end{itemize}
+\end{columns}
+\begin{block}{what would happen by chance?}
+\begin{center}
+\begin{tabular}{rlr}
+  successes & patterns & number \\
+  0 & oooo & $1 \times 1 = 1$ \\
+  1 & ooox, ooxo, oxoo, xooo & $4 \times 4 = 16$ \\
+  2 & ooxx, oxox, oxxo, xoxo, xoox, xxoo & $6 \times 6 = 36$ \\
+  3 & oxxx, xoxx, xxox, xxxx & $4 \times 4 = 16$ \\
+  4 & xxxx & $1 \times 1 = 1$ \\
+  \multicolumn{2}{l}{\textbf{total}} & \textbf{70} \\
+\end{tabular}
+\end{center}
+\end{block}
+
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Picking Tea}
+  \begin{itemize}
+  \item \textbf{70} ways of picking four cups of tea by chance
+    \begin{itemize}
+    \item \textbf{all right:} probability $= 1/70= .0142$
+    \item \textbf{one wrong:} probability $=(1+16)/70= .2428$
+      \spc
+    \item Fisher concludes that he won't believe in Ms Bristol's tea
+      tasting powers unless she correctly discriminates all of eight
+      cups\footnote{in original experiment, all~8 cups were guessed correctly}
+    \end{itemize}
+\spc\pause
+    
+\item this is an example of the \term{hypergeometric} distribution
+    
+  \end{itemize}
+  
+  
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Hypergeometric Distribution}
+  \begin{itemize}
+  \item the probability of $k$ successes in sampling from a population
+    of size $N$ where $K$ items have that feature, \emph{without replacement}
+    \item<2-> the probability of \textbf{4} successes in sampling from a
+      population of size \textbf{8} where \textbf{4} items have that feature
+
+  \end{itemize}
+\pause[2]
+  \begin{columns}
+  \column{.5\linewidth}
+<<hyper>>=
+x <- 0:4 # number of `failures'
+m <- n <- k <- 4
+phyper(0,4,4,4)
+@ 
+
+\column{.49\linewidth}
+<<hyper2,echo=F,results='hide'>>=
+curve(dhyper(x,m,n,k),from=0,to=4,n=5,type='b',lwd=2,col='red',xlab='no correct',ylab='Density',)
+@ 
+\visible<2->{\cimage{img/auto-hyper2-1}}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Hypergeometric Distributions}
+
+  \begin{itemize}
+  \item we have \Sexpr{blue} blue-eyed people in a class of
+    \Sexpr{total}
+  \item what is the chance of getting exactly \Sexpr{round(blue/4)} (or fewer)
+    blue-eyed people if I sample \Sexpr{blue*2} people from the class?
+  \end{itemize}
+  
+  
+  
+<<eyes2>>=
+phyper(round(blue/4),blue,total-blue,blue*2)
+@ 
+
+\begin{itemize}
+\item useful to check, for example, whether a sample represents the population
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Fisher's Exact Test}
+
+  \begin{itemize}
+  \item derived from the hypergeometric distribution
+  \item is this the kind of distribution we expect by chance?
+    \begin{itemize}
+    \item mostly used for 2-way distributions
+    \end{itemize}
+
+  \end{itemize}
+
+<<mkt,echo=F,results='hide'>>=
+eyes2 <- matrix(c(1,11,9,3),nrow=2)
+a <- eyes2[1,1]
+b <- eyes2[1,2]
+c <- eyes2[2,1]
+d <- eyes2[2,2]
+@   
+  
+
+    \begin{center}
+      \begin{tabular}{cccc} \\ \hline
+        ~ & Blue & Brown & Row total \\ \hline
+        Linguistics & \Sexpr{a} & \Sexpr{b} & \Sexpr{a+b} \\
+        Psychology & \Sexpr{c} & \Sexpr{d} & \Sexpr{c+d} \\
+        Column total & \Sexpr{a+c} & \Sexpr{b+d} & \Sexpr{a+b+c+d} \\\hline
+      \end{tabular}  
+    \end{center}
+
+    
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Fisher's Exact Test}  
+  
+      \begin{center}
+\small
+        \begin{tabular}{cccc} \\ \hline
+        ~ & Blue & Brown & Row total \\ \hline
+        Linguistics & $a$ & $b$ & $a+b$ \\
+        Psychology & $c$ & $d$ & $c+d$ \\
+        Column total & $a+c$ & $b+d$ & $a+b+c+d~(=n)$ \\\hline
+      \end{tabular}  
+    \end{center}
+\spc
+
+\[p= \frac{
+     (a+b)!(c+d)!(a+c)!(b+d)!
+    }{
+     a! b! c! d! n!
+    }
+  \]
+\spc
+<<fisher>>=
+      p <- ( factorial(a+b) * factorial(c+d) * factorial(a+c) * factorial(b+d) ) /
+    (factorial(a) * factorial(b) * factorial(c) * factorial(d) * factorial(sum(eyes2)))
+p
+@ 
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Fisher's Exact Test}
+<<fisher2>>=@ 
+# of course, we can be rather lazier than that:
+eyes2
+fisher.test(eyes2,alternative='less')
+@ 
+
+\end{frame}
+\subsection[$\chi^2$]{Pearson's Goodness-of-Fit ($chi^2$) Test}
+\begin{frame}
+  \frametitle{The $\chi^2$ Distribution}
+
+  
+  \begin{itemize}
+  \item Hypergeometric distributions are \emph{discrete} (they only
+    deal with whole numbers)
+  \item a more general distribution is the $\chi^2$ distribution
+  \end{itemize}
+
+  \begin{block}{The $\chi^2$ distribution}
+    \begin{itemize}
+    \item the sum of the squares of normal distributions
+    \item used in many statistics (one of the most common is goodness-of-fit)
+    \end{itemize}
+  \end{block}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{$\chi^2$}
+
+<<chisq,echo=F,results='hide'>>=
+curve(dchisq(x,df=1),from=0,to=8,lwd=2,col=2,ylab='Density',ylim=c(0,0.5))
+@ 
+
+<<chisq2,echo=F,results='hide'>>=
+curve(dchisq(x,df=1),from=0,to=8,lwd=2,col=2,ylab='Density',ylim=c(0,0.5))
+curve(dchisq(x,2),add=T,col=3,lwd=2)
+curve(dchisq(x,3),add=T,col=4,lwd=2)
+curve(dchisq(x,4),add=T,col=5,lwd=2)
+curve(dchisq(x,5),add=T,col=6,lwd=2)
+curve(dchisq(x,6),add=T,col=7,lwd=2)
+curve(dchisq(x,7),add=T,col=8,lwd=2)
+legend('topright',col=2:8,lwd=3,legend=paste0('df=',c(1:7)))
+@   
+\begin{overprint}
+  \onslide<1| handout:0>
+  \cimage[.8\linewidth]{img/auto-chisq-1}
+  \onslide<2-| handout:1>
+  \cimage[.8\linewidth]{img/auto-chisq2-1}
+\end{overprint}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{The $\chi^2$ Test}
+
+  \begin{itemize}
+  \item The $\chi^2$ can be used as a generalised `Fisher's Exact
+    Test'
+  \item it works well for big numbers and multiple rows/columns
+  \item but let's start with a $2 \times 2$ table\ldots
+  \end{itemize}
+<<rfoo>>=
+# use some R-foo to choose Linguistics,Psychology,Blue,Brown from our dataset
+eyes3 <- eyes[eyes$department %in% c('Linguistics','Psychology'),]
+eyes3 <- eyes3[eyes3$eyecol %in% c('Blue','Brown'),]
+table(eyes3$department,eyes3$eyecol)
+# magic to drop unused factor levels
+eyes3 <- droplevels(eyes3)
+table(eyes3$department,eyes3$eyecol)
+@ 
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Our Data}
+<<t,echo=F,results='hide'>>=
+t <- table(eyes3$department,eyes3$eyecol)
+a <- t[1,1]
+b <- t[1,2]
+c <- t[2,1]
+d <- t[2,2]
+@ 
+    \begin{center}
+      \begin{tabular}{cccc} \\ \hline
+        ~ & Blue & Brown & Row total \\ \hline
+        Linguistics & \Sexpr{a} & \Sexpr{b} & \Sexpr{a+b} \\
+        Psychology & \Sexpr{c} & \Sexpr{d} & \Sexpr{c+d} \\
+        Column total & \Sexpr{a+c} & \Sexpr{b+d} & \Sexpr{a+b+c+d} \\\hline
+      \end{tabular}  
+    \end{center}
+
+    \begin{itemize}
+    \item under H$_{\text{0}}$, we wouldn't expect eye-colour to be
+      determined by department (or vice-versa)
+    \item[\ra] we would expect these two variables to be \term{independent}
+      
+    \item if they were independent, how many people might we expect to
+      be in each cell?
+    \item[\ra] \emph{expected values}
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Expected Values}
+  
+  \begin{center}
+      \begin{tabular}{cccc} \\ \hline
+        ~ & Blue & Brown & Row total \\ \hline
+        Linguistics &
+                      \only<1| handout:1>{$\frac{\Sexpr{a+b}}{\Sexpr{a+b+c+d}}\times\frac{\Sexpr{a+c}}{\Sexpr{a+b+c+d}}\times{}\Sexpr{a+b+c+d}=\Sexpr{(a+b)*(a+c)/(a+b+c+d)}$}%
+                     \only<2-| handout:0>{$\frac{\Sexpr{a+b}\times{}\Sexpr{a+c}}{\Sexpr{a+b+c+d}}=\Sexpr{(a+b)*(a+c)/(a+b+c+d)}$}
+                 & \visible<3| handout:0>{$\frac{\Sexpr{a+b}\times{}\Sexpr{b+d}}{\Sexpr{a+b+c+d}}=\Sexpr{(a+b)*(b+d)/(a+b+c+d)}$}  & \textcolor{red}{\Sexpr{a+b}} \\
+        Psychology & ~ & ~ & \textcolor{red}{\Sexpr{c+d}} \\
+        Column total & \textcolor{red}{\Sexpr{a+c}} & \textcolor{red}{\Sexpr{b+d}} & \textcolor{red}{\Sexpr{a+b+c+d}} \\\hline
+      \end{tabular}  
+    \end{center}
+
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Expected Values (2)}
+<<mat,echo=F,results='hide'>>=
+et <- rowSums(t) %o% colSums(t) / sum(t)
+#et <- addmargins(et)
+ea <- et[1,1]
+eb <- et[1,2]
+ec <- et[2,1]
+ed <- et[2,2]
+@ 
+    \begin{center}
+      \begin{tabular}{cccc} \\ \hline
+        ~ & Blue & Brown & Row total \\ \hline
+        Linguistics & \Sexpr{ea} & \Sexpr{eb} & \Sexpr{ea+eb} \\
+        Psychology & \Sexpr{ec} & \Sexpr{ed} & \Sexpr{ec+ed} \\
+        Column total & \Sexpr{ea+ec} & \Sexpr{eb+ed} & \Sexpr{ea+eb+ec+ed} \\\hline
+      \end{tabular}  
+    \end{center}
+    \begin{itemize}
+    \item the Pearson statistic is a measure of how far the
+      \emph{observed} values deviate from the \emph{expected} values
+    \end{itemize}
+\[ \chi^2 = \sum\frac{(\textnormal{observed
+      count}-\textnormal{expected count})^2}{\textnormal{expected
+      count}} \]
+
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Calculating $\chi^2$}
+<<scv,echo=F,results='hide'>>=
+csval=((a-ea)^2/ea)+((b-eb)^2/eb)+((c-eb)^2/ec)+((d-ed)^2/ed)
+@   
+\begin{columns}
+  \column{.49\linewidth}
+  \textbf{observed}
+\begin{center}
+  \begin{tabular}{ccc} \\ \hline
+        ~ & Blue & Brown \\ \hline
+        Linguistics & \Sexpr{a} & \Sexpr{b} \\
+        Psychology & \Sexpr{c} & \Sexpr{d} \\\hline
+      \end{tabular}  
+\end{center}
+  \column{.49\linewidth}
+  \textbf{expected}
+\begin{center}
+  \begin{tabular}{ccc} \\ \hline
+        ~ & Blue & Brown \\ \hline
+        Linguistics & \Sexpr{ea} & \Sexpr{eb} \\
+        Psychology & \Sexpr{ec} & \Sexpr{ed} \\\hline
+      \end{tabular}  
+\end{center}
+\end{columns}
+\spc[2em]
+\[ \chi^2 = \sum\frac{(\textnormal{observed
+      count}-\textnormal{expected count})^2}{\textnormal{expected
+      count}} \]
+\spc
+\[ \chi^2 = \frac{(\Sexpr{a}-\Sexpr{ea})^2}{\Sexpr{ea}}+
+  \frac{(\Sexpr{b}-\Sexpr{eb})^2}{\Sexpr{eb}}+
+  \frac{(\Sexpr{c}-\Sexpr{ec})^2}{\Sexpr{ec}}+
+  \frac{(\Sexpr{d}-\Sexpr{ed})^2}{\Sexpr{ed}} = \alert{\Sexpr{csval}} \]
+  
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Degrees of Freedom}
+
+  \begin{center}
+      \begin{tabular}{cccc} \\ \hline
+        ~ & Blue & Brown & Row total \\ \hline
+        Linguistics & ~ & ~ & \textcolor{red}{\Sexpr{a+b}} \\
+        Psychology & ~ & ~ & \textcolor{red}{\Sexpr{c+d}} \\
+        Column total & \textcolor{red}{\Sexpr{a+c}} & \textcolor{red}{\Sexpr{b+d}} & \textcolor{red}{\Sexpr{a+b+c+d}} \\\hline
+      \end{tabular}  
+    \end{center}
+    \begin{itemize}
+    \item given that we know the marginals, how many of the values in
+      the table can by \emph{anything}?
+    \item (a bit like Sudoku!)
+      \pause
+    \item<visible@2-> 1 degree of freedom  
+    \item<visible@2-> in general, degrees of freedom $=(\textnormal{rows}-1)\times{}(\textnormal{columns}-1)$
+    \end{itemize}
+  
+\end{frame}
+
+\begin{frame}
+\frametitle{Putting it Together\ldots}
+\begin{itemize}
+\item $\chi^2(1)=\Sexpr{csval}$
+\end{itemize}
+<<curve,echo=F,results='hide'>>=
+curve(dchisq(x,1),from=0,to=8,ylab='density',type='n',ylim=c(0,.5))
+x <- seq(csval,8,length.out=101)
+polygon(c(x,max(x),csval),c(dchisq(x,1),0,0),col='pink',lty=0)
+curve(dchisq(x,1),from=0,to=8,ylab='density',lwd=2,col='red',add=T)
+abline(v=csval,col='blue',lwd=2)
+pv<-pchisq(csval,1,lower.tail=F)
+#text(6,.4,bquote(chi^2~(1) == .(csval)))
+text(2,.35,bquote(p == .(.rround(pv,3,drop.zero=T))))
+@ 
+\cimage[.8\linewidth]{img/auto-curve-1}  
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Yates' Correction}
+  \begin{itemize}
+  \item Pearson's goodness-of-fit calculation is an imperfect fit to
+    the $\chi^2$ distribution
+  \item one adjustment for small $n$ (automatically applied by \R{R})
+    is \term{Yates' correction}
+    
+  \item simply subtract $0.5$ from each
+    $\textnormal{observed}-\textnormal{expected}$ term
+
+  \end{itemize}
+  
+\[ \chi^2 = \sum\frac{(\textnormal{observed
+      count}-\textnormal{expected count}-0.5)^2}{\textnormal{expected
+      count}} \]
+ 
+  
+\end{frame}
+
+\begin{frame}[plain]
+\Large
+\begin{center}
+and now:  R time
+\end{center}
+\end{frame}
+
+\end{document}

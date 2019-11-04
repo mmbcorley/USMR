@@ -297,8 +297,11 @@ with(heights,vioplot(HEIGHT~gender,col=c('red','blue'),ylab='height in cm'))
 \end{frame}
 
 
-\section{Experiments}
-\subsection[Interpreting]{Interpreting Experiments}
+
+
+
+\subsection{Experiments}
+%\subsection[Interpreting]{Interpreting Experiments}
 
 \begin{frame}\frametitle{An experiment?}
 
@@ -342,7 +345,7 @@ with(heights,vioplot(HEIGHT~gender,col=c('red','blue'),ylab='height in cm'))
 %% \end{itemize}
 %% \end{frame}
 
-\subsection[Types]{Types of experiment}
+%\subsection[Types]{Types of experiment}
 
 
 \begin{frame}\frametitle{Types of experiment}
@@ -497,7 +500,7 @@ best explanation \atright{\emph{\ra{}~interpretation}}
 \end{itemize}
 \end{frame}
 
-\subsection{Maths}
+\subsection[Testing]{Testing the Null}
 
 \begin{frame}
   \frametitle{Operationalising H$_{\text{0}}$}
@@ -558,75 +561,183 @@ plot(density(mismat-mat))
 \end{frame}
 
 
-\subsection[Criteria]{Setting Criteria: $\alpha$}
-
-
-
-
 \begin{frame}
-\frametitle{Setting Criteria ($\alpha$)}
-\begin{center}
-  \fbox{\parbox{\linewidth}{any differences in times to name colours
-      will be \emph{due to chance}}}
-\end{center}
-\begin{itemize}
-\item what probability of the experimental results we obtain is
-  \emph{small enough} for us to reject H$_{\text{0}}$?
-\end{itemize}
-\pause
-\textbf{problems}
-\begin{itemize}
-\item \term{type 1 error:} although we rejected H$_{\text{0}}$ and
-  accepted H$_{\text{1}}$ (small probability of H$_{\text{0}}$),
-  \emph{the differences were really due to chance}
-\item \term{type 2 error:} although we accepted H$_{\text{0}}$ and
-  rejected H$_{\text{1}}$ (large probability of H$_{\text{0}}$),
-  \emph{the differences were really due to the experimental manipulation}
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Choosing $\alpha$}
-\begin{center}
-  \fbox{\parbox{\linewidth}{any differences in times to name colours
-      will be \emph{due to chance}}}
-\end{center}
-\begin{itemize}
-\item what probability of the experimental results we obtain is
-  \emph{small enough} for us to reject H$_{\text{0}}$?
+  \frametitle{The Standard Normal Curve (Again)}
   \begin{itemize}
-  \item what threshold (\term{$\alpha$ level}) should we set?
+  \item[\ra] under H$_{\text{0}}$, the \textbf{mean difference} in the
+  population should be \textbf{zero}
   \end{itemize}
-\pause
-\item obviously, this depends on what the experiment is for!
-\item \emph{drug trial}: want to \emph{minimize} the chance of a
-  \term{type 1 error} (results really due to chance)
-\item \emph{general psychology:} want a good compromise between the
-  two possible errors
-\pause
-\item in psychology, the most used criterion is \textcolor{red!50!black}{$p(\text{H$_{\text{0}}$})
-  < .05$} (usually abbreviated as \textcolor{red!50!black}{$p < .05$})
-\end{itemize}
 
+<<sezero,echo=F,results='hide'>>=
+diffs <- rnorm(24, mean=10, sd=15)
+diffs <- diffs + runif(24,-3,3)
+se <- sd(diffs)/sqrt(24)
+m <- mean(diffs)
+x <- seq(-3.5*se,+3.5*se,length.out=153)
+plot(x,dnorm(x,0,se),lwd=3,type='l',col='blue',ylab='Density',xlab='diff (cm)')
+text(min(x),dnorm(0,0,se),paste0('se=',.rround(se,2)),adj=-0.05,cex=1.5)
+
+pd <- 2.06*se
+plot(x,dnorm(x,0,se),lwd=3,type='l',col='blue',ylab='Density',xlab='diff (cm)')
+text(min(x),dnorm(0,0,se),paste0('se=',.rround(se,2)),adj=-0.05,cex=1.5)
+abline(v=pd,col='red',lwd=3)
+text(pd,dnorm(0,0,se),.rround(pd,2),adj=-0.2,cex=1.5,col='red')
+
+plot(x,dnorm(x,0,se),lwd=3,type='n',ylab='Density',xlab='diff (cm)')
+text(min(x),dnorm(0,0,se),paste0('se=',.rround(se,2)),adj=-0.05,cex=1.5)
+x2 <- seq(pd,max(x),length.out=31)
+polygon(c(x2,pd,pd),c(dnorm(x2,0,se),0,0),col='lightblue',lty=0)
+lines(x,dnorm(x,0,se),lwd=3,type='l',col='blue')
+abline(v=pd,col='red',lwd=3)
+text(pd,dnorm(0,0,se),.rround(pd,2),adj=-0.2,cex=1.5,col='red')
+text(pd,dnorm(pd,0,se),paste0('p<=',.rround(pnorm(pd,0,se,lower.tail=F))),col='blue',adj=c(-0.2,0.2),cex=1.2)
+
+x<-seq(-3.5,3.5,length.out=153)
+pd1 <- pd/se
+plot(x,dnorm(x,0,1),lwd=3,type='n',ylab='Density',xlab='DIFF (SEs)')
+text(min(x),dnorm(0,0,1),'se=1',adj=-0.05,cex=1.5)
+x2 <- seq(pd1,max(x),length.out=31)
+polygon(c(x2,pd1,pd1),c(dnorm(x2,0,1),0,0),col='lightblue',lty=0)
+lines(x,dnorm(x,0,1),lwd=3,type='l',col='blue')
+abline(v=pd1,col='red',lwd=3)
+text(pd1,dnorm(0,0,1),paste0(.rround(pd,2),'/',.rround(se,2),'=',.rround(pd1,2)),adj=1.05,cex=1.2,col='red')
+text(pd1,dnorm(pd1,0,1),paste0('p<=',.rround(pnorm(pd1,0,1,lower.tail=F))),col='blue',adj=c(-0.2,0.2),cex=1.2)
+@ 
+
+\begin{columns}
+  \column{.48\linewidth}
+\begin{overprint}
+  \onslide<1| handout:0>
+  \cimage{img/auto-sezero-1}
+  \onslide<2| handout:0>
+  \cimage{img/auto-sezero-2}
+  \onslide<3-| handout:1>
+  \cimage{img/auto-sezero-3}
+\end{overprint}
+\column{.48\linewidth}
+\begin{overprint}
+  \onslide<1-3| handout:0>
+  ~
+  \onslide<4-| handout:1>
+  \cimage{img/auto-sezero-4}
+\end{overprint}
+\end{columns}
 \end{frame}
 
-\begin{frame}[plain]
-~
-{\huge
- psychological ``results'' can have as much as a \term{1 in
-    20} probability of being entirely due to chance!}
-\pause
-\spc
+
+\begin{frame}
+  \frametitle{Design Differences}
+
+  \begin{block}{To Calculate Statistical Significance}
+    \begin{itemize}
+    \item divide the \term{mean difference} by the \emph{standard
+        error of the mean difference}
+      \begin{itemize}
+      \item[\ra] `standard errors from zero'
+      \end{itemize}
+\item look up the $p$-value using the standard normal curve
+  \begin{itemize}
+  \item[\ra] \R{pnorm(value, 0, 1, lower.tail = \ldots)}\\
+    or just\\
+    \R{pnorm(value, lower.tail = \ldots)}
+  \end{itemize}
+\end{itemize}
+  \end{block}
+
+  \spc\pause
+  \begin{itemize}
+  \item three remaining issues
+    \begin{enumerate}
+    \item which tail, when?
+    \item we don't always use the normal distribution
+    \item<alert@3-> what `probability due to chance' is low enough? 
+    \end{enumerate}
+    
+  \end{itemize}
+  
+\end{frame}
+
+\subsection{Tailedness}
+
+\begin{frame}
+  \frametitle{Tailedness}
+
+<<bar,echo=F,results='hide',message=F>>=
+d <- data.frame(Match=rnorm(24,900,30))
+d$Mismatch<-d$Match-diffs
+require(tidyverse)
+d <- d %>% pivot_longer(c(Match,Mismatch))
+m <- tapply(d$value,list(d$name),mean)
+se <- tapply(d$value,list(d$name),st.err)
+my.bp(m,se,col=c('blue','red'),ylab='mean colour naming time (ms)',xlab='Condition',offset=600,ylim=c(600,max(m+se)))
+@   
+
+\begin{columns}
+  \column{.4\linewidth}
+\begin{center}
+  \fbox{\parbox{\linewidth}{when timed naming the colours that words
+      are printed in, people will take \alert<2->{longer} to name the colours
+      \atright{\term{(DV)}}\\ when the content of the words doesn't
+      match than when it does\atright{\term{(IV)}}}}
+  
+\end{center}
+  \pause
+\spc[2em]
 \begin{itemize}
-\item a difference in DVs is said to be \term{significant} if $p < .05$
+\item<bad@1-> reject immediately (no stats needed!)
 \end{itemize}
 
+\column{.56\linewidth}
+\cimage{img/auto-bar-1}
+
+\end{columns}  
 \end{frame}
 
 
-\section[df]{Degrees of Freedom (df)}
 
-\subsection{How they're used}
+\begin{frame}
+  \frametitle{Tailedness}
+<<2norm,echo=F,results='hide'>>=
+x <- seq(-3.5,3.5,length.out=153)
+q <- qnorm(0.05,lower.tail=F)
+plot(x,dnorm(x),type='n',xlab='SEs',ylab='Density')
+x2 <- seq(q,3.5,length.out=31)
+polygon(c(x2,q,q),c(dnorm(x2),0,0),lty=0,col='lightblue')
+lines(x,dnorm(x),lwd=3,col='blue')
+text(0,dnorm(1),'p<=.05',cex=1.5)
+
+q <- qnorm(0.025,lower.tail=F)
+plot(x,dnorm(x),type='n',xlab='SEs',ylab='Density')
+x2 <- seq(q,3.5,length.out=31)
+polygon(c(x2,q,q),c(dnorm(x2),0,0),lty=0,col='lightblue')
+x2 <- seq(-q,-3.5,length.out=31)
+polygon(c(x2,-q,-q),c(dnorm(x2),0,0),lty=0,col='lightblue')
+lines(x,dnorm(x),lwd=3,col='blue')
+text(0,dnorm(1),'p<=.05',cex=1.5)
+@ 
+
+\begin{columns}
+  \column{.48\linewidth}
+  \begin{center}
+  \ldots{}will be longer/shorter\ldots{}
+\end{center}
+\spc
+\cimage[.9\linewidth]{img/auto-2norm-1}
+
+\column{.48\linewidth}
+\begin{center}
+  \ldots{}there will be a difference\ldots{}
+\end{center}
+\spc
+\cimage[.9\linewidth]{img/auto-2norm-2}
+\end{columns}
+\end{frame}
+
+\section{t-test}
+
+
+
+\subsection[df]{Degrees of Freedom (df)}
 
 \begin{frame}\frametitle{Distributions and Samples}
 \begin{itemize}
@@ -635,16 +746,16 @@ we're working with a \term{sample}
 \item in order to estimate the population distribution we need to
 know \emph{how free the sample was to vary}
 \item \term{degrees of freedom}
-\end{itemize}
-% \pause
-% \spc
-% \item already snuck in to last lecture
-% \[ \sigma = \sqrt{\frac{\sum{(x-\mu)^2
-% }}{\textcolor{red}{n-1}}} \]
 
+\pause
+\spc
+ \item already snuck in to last lecture
+ \[ \sigma = \sqrt{\frac{\sum{(x-\mu)^2
+ }}{\textcolor{red}{n-1}}} \]
+\end{itemize}
 \end{frame}
 
-\subsection{What they mean}
+%\subsection{What they mean}
 
 
 \begin{frame}\frametitle{Degrees of Freedom}
@@ -699,6 +810,125 @@ be adjusted to ensure that $\mu=10$).  So the sample has \term{4 degrees of free
 \item also true for IV: how many of the \term{means for each level}
   can vary with the outcome (difference) being the same?
 \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The $t$ Distribution}
+<<tplot,echo=F,results='hide'>>=
+
+
+dot <- function(n) {
+    plot(x,dt(x,n),lwd=3,col='blue',xlab='SEs',ylab='Density',main=paste0("t(",n,")"),type='l',ylim=c(0,dnorm(0)))
+}
+
+for(i in c(2,3,6,12,24,48,96)) {
+    dot(i)
+}
+
+plot(x,dnorm(x),lwd=3,col='blue',xlab='SEs',ylab='Density',main='Normal',type='l',ylim=c(0,dnorm(0)))
+@ 
+  \begin{overprint}
+\onslide<1| handout:0>
+\cimage[.8\linewidth]{img/auto-tplot-8}
+\onslide<2| handout:0>
+\cimage[.8\linewidth]{img/auto-tplot-7}
+\onslide<3| handout:0>
+\cimage[.8\linewidth]{img/auto-tplot-6}
+\onslide<4| handout:0>
+\cimage[.8\linewidth]{img/auto-tplot-5}
+\onslide<5| handout:0>
+\cimage[.8\linewidth]{img/auto-tplot-4}
+\onslide<6| handout:1>
+\cimage[.8\linewidth]{img/auto-tplot-3}
+\onslide<7| handout:0>
+\cimage[.8\linewidth]{img/auto-tplot-2}
+\onslide<8| handout:0>
+\cimage[.8\linewidth]{img/auto-tplot-1}
+\end{overprint}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Student's $t$ Test}
+  \begin{columns}
+    \column{.3\linewidth}
+    \cimage{img/Gossett}
+    \spc
+    \begin{center}
+      William Sealy Gossett
+      \end{center}
+    \column{.68\linewidth}
+    \begin{itemize}
+    \item $t$ is called $t$ \emph{because it's compared to the $t$
+        distribution}
+    \item it's \emph{calculated} as
+      $\frac{\textnormal{mean(difference)}}{\textnormal{se(difference)}}$
+    \item[\ra] you already know how to calculate $t$
+      \spc
+    \item<2-> slightly more involved when comparing groups, but the
+      basic principle is the same
+    \end{itemize}
+    
+  \end{columns}
+  
+\end{frame}
+
+\subsection[Alpha]{Setting Criteria: $\alpha$}
+
+
+\begin{frame}
+\frametitle{Setting Criteria ($\alpha$)}
+\begin{center}
+  \fbox{\parbox{\linewidth}{any differences in times to name colours
+      will be \emph{due to chance}}}
+\end{center}
+\begin{itemize}
+\item what probability of the experimental results we obtain is
+  \emph{small enough} for us to reject H$_{\text{0}}$?
+\end{itemize}
+\pause
+\textbf{problems}
+\begin{itemize}
+\item \term{type 1 error:} although we rejected H$_{\text{0}}$ and
+  accepted H$_{\text{1}}$ (small probability of H$_{\text{0}}$),
+  \emph{the differences were really due to chance}
+\item \term{type 2 error:} although we accepted H$_{\text{0}}$ and
+  rejected H$_{\text{1}}$ (large probability of H$_{\text{0}}$),
+  \emph{the differences were really due to the experimental manipulation}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Choosing $\alpha$}
+\begin{center}
+  \fbox{\parbox{\linewidth}{any differences in times to name colours
+      will be \emph{due to chance}}}
+\end{center}
+\begin{itemize}
+\item what probability of the experimental results we obtain is
+  \emph{small enough} for us to reject H$_{\text{0}}$?
+  \begin{itemize}
+  \item what threshold (\term{$\alpha$ level}) should we set?
+  \end{itemize}
+\pause
+\item obviously, this depends on what the experiment is for!
+\item \emph{drug trial}: want to \emph{minimize} the chance of a
+  \term{type 1 error} (results really due to chance)
+\item \emph{general experimental work:} want a good compromise between the
+  two possible errors
+\pause
+\item in psychology, the most used criterion is \textcolor{red!50!black}{$p < .05$})
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[plain]
+~
+{\huge
+ empirical ``results'' can have as much as a \term{1 in
+    20} probability of being entirely due to chance!}
+
 \end{frame}
 
 

@@ -58,6 +58,37 @@ source('R/preamble.R') # useful functions
 \titlepage
 \end{frame}
 
+{ \definecolor{mycolor}{HTML}{FEF5DA}
+  \setbeamercolor{background canvas}{bg=mycolor}
+  \begin{frame}<handout:0>{COURSE FEEDBACK}
+    \begin{columns}
+      \column{.6\linewidth}
+      \begin{enumerate}
+        
+      \item labs could be better
+        \begin{itemize}
+        \item hard to work in concourse
+        \end{itemize}
+\spc
+      \item tutors are (mostly?) lovely
+\spc        
+      \item lectures could:
+        \begin{itemize}
+        \item be better structured
+        \item include more R
+        \item be available sooner
+        \end{itemize}
+
+        
+      \end{enumerate}
+      \column{.39\linewidth}
+      \cimage{img/index_cards}
+    \end{columns}
+  \end{frame}
+}
+
+  
+  
 \begin{frame}
 \frametitle{Today}
 \tableofcontents[part=1]
