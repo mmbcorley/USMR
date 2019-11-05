@@ -1,0 +1,69 @@
+\setbeamercovered{dynamic}
+\RequirePackage{pifont} %% for ticks
+
+\newcommand{\perpet}[1]{\usefont{OT1}{mpp}{m}{n}#1}
+
+\newcommand<>{\smex}[1]{\textit#2{#1}} % overlay-aware smex
+\newcommand<>{\term}[1]{\textbf#2{#1}} % and term
+\newcommand<>{\atright}[1]{\hspace*{\fill}\nolinebreak[1]\hspace*{\fill}\uncover#2{\mbox{#1}}}
+
+\newenvironment{goodenv}{\only{\useitemizeitemtemplate{\structure{\small\ding{52}}}\usesubitemizeitemtemplate{\structure{\footnotesize\ding{52}}}}}{}
+\newenvironment{badenv}{\only{\useitemizeitemtemplate{\color{red}{\small\ding{56}}}\usesubitemizeitemtemplate{\color{red}{\footnotesize\ding{56}}}}}{}
+
+
+\newcommand*{\ra}{\ensuremath{\rightarrow}}
+
+\newenvironment<>{Quote}%
+{\setbeamertemplate{block begin}[notitle]%
+\begin{block}#1{}\begin{quote}\small\itshape}%
+      {\end{quote}\end{block}%
+\setbeamertemplate{block begin}[default]}
+
+\newsavebox{\QName}
+\newenvironment<>{AQuote}[1]%
+  {\setbeamertemplate{block begin}[notitle]%
+    \begin{block}#2{}\begin{AAQuote}{#1}}%
+      {\end{AAQuote}\end{block}
+    \setbeamertemplate{block begin}[default]}
+
+\newenvironment{AAQuote}[1]%
+{\sbox{\QName}{\scriptsize #1}\begin{quote}\small\itshape}%
+  {\small\atright{\usebox{\QName}}%
+   \end{quote}}
+
+%% centered images
+
+%\newcounter{mb@imgcount}
+%\newlength{\mb@indent}
+%\newcommand{\centeredimage}[2][\linewidth]{%
+%  \setlength{\mb@indent}{\linewidth}%
+%  \addtolength{\mb@indent}{-#1}%
+%  \setlength{\mb@indent}{.5\mb@indent}%
+%  \hspace*{\mb@indent}%
+%  \begin{beamerboxesrounded}[width=#1,shadow=true,scheme=block]{}%
+%    \stepcounter{mb@imgcount}%
+%    \pgfdeclareimage[width=\linewidth,interpolate=true]{img\themb@imgcount}{#2}%
+%    \pgfuseimage{img\themb@imgcount}%
+%  \end{beamerboxesrounded}%
+%}
+
+\defbeamertemplate{block begin}{notitle}
+{
+  \usebeamerfont{block body}%
+  \begin{beamercolorbox}[colsep*=.75ex,vmode]{block body}%
+    \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
+}
+
+\renewcommand<>{\bgex}[1]%
+{%
+\setbeamertemplate{block begin}[notitle]%
+\begin{block}#2{}{\small\textit{#1}}\end{block}
+\setbeamertemplate{block begin}[default]%
+}%
+
+\newenvironment{bgexes}%
+{\setbeamertemplate{block begin}[notitle]%
+\begin{block}{}\small\itshape}
+{\end{block}\setbeamertemplate{block begin}[default]}
+%\newcommand<>{\bgex}[1]%
+%{\begin{block}#2{}{\small\textit{#1}}\end{block}}

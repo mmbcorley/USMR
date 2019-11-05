@@ -1,0 +1,41 @@
+\newcounter{mb@imgcount}
+\newlength{\mb@indent}
+\newcommand{\centeredimage}[2][\linewidth]{%
+  \setlength{\mb@indent}{\linewidth}%
+  \addtolength{\mb@indent}{-#1}%
+  \setlength{\mb@indent}{.5\mb@indent}%
+  \hspace*{\mb@indent}%
+  \begin{beamerboxesrounded}[width=#1,shadow=true,scheme=block]{}%
+    \stepcounter{mb@imgcount}%
+    \pgfdeclareimage[width=\linewidth,interpolate=true]{img\themb@imgcount}{#2}%
+    \pgfuseimage{img\themb@imgcount}%
+  \end{beamerboxesrounded}%
+}
+
+\newcommand{\cimage}[2][\linewidth]{%
+  \setlength{\mb@indent}{\linewidth}%
+  \addtolength{\mb@indent}{-#1}%
+  \setlength{\mb@indent}{.5\mb@indent}%
+  \hspace*{\mb@indent}%
+  \stepcounter{mb@imgcount}%
+  \pgfdeclareimage[width=#1,interpolate=true]{img\themb@imgcount}{#2}%
+  \pgfuseimage{img\themb@imgcount}%
+}
+
+\newcommand{\cteximage}[2][\linewidth]{%
+  \setlength{\mb@indent}{\linewidth}%
+  \addtolength{\mb@indent}{-#1}%
+  \setlength{\mb@indent}{.5\mb@indent}%
+  \hspace*{\mb@indent}%
+  \resizebox{#1}{!}{\input{#2}}%
+}
+
+\newcommand{\ctimage}[2][\linewidth]{%
+  \setlength{\mb@indent}{\linewidth}%
+  \addtolength{\mb@indent}{-#1}%
+  \setlength{\mb@indent}{.5\mb@indent}%
+  \hspace*{\mb@indent}%
+  \begin{beamerboxesrounded}[width=#1,shadow=true,scheme=block]{}%
+  \resizebox{\linewidth}{!}{\input{#2}}%
+  \end{beamerboxesrounded}%
+}
