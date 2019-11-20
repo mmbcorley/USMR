@@ -1,4 +1,4 @@
-objects = l1-16.pdf l3-16.pdf l4-16.pdf l5-16.pdf l6-16.pdf l7-16.pdf l8-16.pdf l9-16.pdf l10-16.pdf
+objects = l1-16.pdf l3-16.pdf l4-16.pdf l5-16.pdf l6-16.pdf l7-16.pdf l8-16.pdf l9b-16.pdf l10-16.pdf
 
 # shouldn't need any changes below here
 
